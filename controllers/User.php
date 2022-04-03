@@ -100,22 +100,27 @@ class User extends User_Data
     {
         $data = $this->general_data;
         $data['title'] = '我的收藏夹';
-        $data['teachers'] = $this->all_model->general_select("xz_teachers", "id,name", array("employed" => 0));
-
+        $data['folder'] = $this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        for ($i = 0; $i < count($data['folder']); $i++) {
+            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
+        }
+        $data['folder'][] = array("id" => "0", "folder_name" => "根目录");   //不能直接放到第一位
+        array_unshift($data['folder'], array_pop($data['folder']));         //把最后一个元素移到第一位
 
         $data['bookmark']=array();
+        $data['bookmark'][]=$this->all_model->general_list("xz_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
         $folder0=$this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
         foreach($folder0 as $item0){
             $data['bookmark'][$item0['folder_name']]=array();
+            $data['bookmark'][$item0['folder_name']][]=$this->all_model->general_list("xz_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>$item0['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
             $father_id1=$item0['id'];
             $folder1=$this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $father_id1), array("convert(folder_name using gbk)" => "asc"));
             foreach ($folder1 as $item1){
                 $data['bookmark'][$item0['folder_name']][$item1['folder_name']]=array();
                 $data['bookmark'][$item0['folder_name']][$item1['folder_name']][]=$this->all_model->general_list("xz_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>$item1['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
             }
-            $data['bookmark'][$item0['folder_name']][]=$this->all_model->general_list("xz_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>$item0['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
         }
-       $data['bookmark'][]=$this->all_model->general_list("xz_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+
 
 /*
         $temp_id = $_SESSION["teacher_id"];
@@ -165,7 +170,7 @@ class User extends User_Data
             } elseif ($this->input->post('submit') == "delete") {
                 $this->all_model->general_delete("xz_bookmark", array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
             }
-            redirect('user/manage_bookmark/');
+            redirect('user/manage_bookmark/#'.$this->input->post('id'));
         }
     }
 

@@ -52,7 +52,7 @@
                 <input type="checkbox" name="is_private" class="checkbox" value="1">
             </td>
             <td>
-                <button type="submit" name="submit" value="addnew" class="btn btn-success">提交</button>
+                <button type="submit" name="submit" value="addnew" class="btn btn-success">添加</button>
             </td>
         </tr>
         </form>
@@ -62,7 +62,7 @@
             ?>
             <?php echo form_open('user/manage_bookmark/', array('class' => 'form-horizontal', 'role' => 'form')); ?>
             <tr>
-                <td><?php echo $i; ?><input type="hidden" name="id" class="form-control" value="<?php echo $item['id']; ?>"></td>
+                <td><a name="<?php echo $item['id']; ?>"></a><?php echo $i; ?><input type="hidden" name="id" class="form-control" value="<?php echo $item['id']; ?>"></td>
                 <td>
                     <input type="text" name="title" class="form-control" value="<?php echo $item['title']; ?>"></td>
                 <td>
