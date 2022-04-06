@@ -138,7 +138,11 @@
                 }
                 echo $icon;
                 echo mb_substr($bookmark[$i]['title'], 0, 10);
-                echo '</a></div>';
+                echo '</a>';
+                if ($bookmark[$i]['is_private']==1){
+                    echo '<i class="fa fa-lock red"></i>';
+                }
+                echo '</div>';
                 echo "\n";
                 if ($bookmark[$i]["tag"] == '') {
                     $tmp_tag = "无标签";
@@ -173,36 +177,44 @@
 
 
     function getData(){
-        console.log("abc");
-        $.ajax({
-            //url: "https://office.sleda.com:8097/web/index.html",
-            url: "http://office.sleda.com:8096/web/index.html",
-            timeout: 5000
-        }).done(function (data,status) {
-            // 请求成功
-            if (status == "success") {
+        var url= $("#url").val();
+        if (IsURL(url)){
+            $.ajax({
+                url:"/user/url_title/",
+                type:"POST",
+                data:{"url":url},
+                timeout: 5000
+            }).done(function (data,status) {
                 console.log(data);
-            }
-            else{
-                console.log("关机");
-            }
-        }).fail(function (jqXHR, textStatus, errorThrown) {
-            // net::ERR_CONNECTION_REFUSED 发生时，也能进入
-            console.info("网络出错");
-            $(".server_status").html("关机");
-        });
-        /*
-        $.get("https://xzsoftware.sleda.com/", function(data,status){
-            if (status == "success") {
-                $(".hawkhost_status").html("开机");
-            }
-            else{
-                $(".hawkhost_status").html("关机");
-            }
-        });
-        */
+                // 请求成功
+                if (status == "success") {
+                    $("#title").val(data);
+                }
+                else{
+                    alert("未成功获取标题");
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                // net::ERR_CONNECTION_REFUSED 发生时，也能进入
+                alert("未成功获取标题");
+            });
+        }
+        else{
+            alert("网址无效！");
+        }
     };
 
+    function IsURL(strUrl) {
+        if (strUrl==''||strUrl==null){
+            return false;
+        }
+        var regular = /^\b(((https?|http?|ftp):\/\/)?[-a-z0-9]+(\.[-a-z0-9]+)*\.(?:com|edu|gov|int|mil|net|org|biz|info|name|museum|asia|coop|aero|[a-z][a-z]|((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]\d)|\d))\b(\/[-a-z0-9_:\@&?=+,.!\/~%\$]*)?)$/i
+        if (regular.test(strUrl)) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 
     //自动折叠功能，目前不用
     /*

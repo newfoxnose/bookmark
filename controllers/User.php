@@ -164,6 +164,10 @@ class User extends User_Data
             if ($this->input->post('submit') == "addnew") {
                 $update_arr["teacher_id"] = $_SESSION['teacher_id'];
                 $update_arr["createtime"] = date("Y-m-d H:i:s");
+                $paresed_url=parse_url($this->input->post('url'));
+                if (check_remote_file_exists($paresed_url['scheme'].'://'.$paresed_url['host'].'/favicon.ico')){
+                    $update_arr["icon_uri"] = $paresed_url['scheme'].'://'.$paresed_url['host'].'/favicon.ico';
+                }
                 $this->all_model->general_insert("xz_bookmark", $update_arr);
             } elseif ($this->input->post('submit') == "update") {
                 $this->all_model->general_update("xz_bookmark", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
@@ -868,6 +872,19 @@ class User extends User_Data
                 redirect('user/teacher_pwd/success');
             }
         }
+    }
+//获取网页标题
+    public function url_title()
+    {
+        $data = $this->general_data;
+        $url=$this->input->post('url');
+        $this->load->library('curl');
+        $html=Curl::get($url);
+        $reTag = "/<title>([\s\S]*?)<\/title>/i";
+        preg_match($reTag, $html, $match);
+        $title=$match[1];
+        echo $title;
+        //$arr = Curl::post('http://localhost:9090/test.php', array('a'=>1,'b'=>2));
     }
 
 //管理目录
