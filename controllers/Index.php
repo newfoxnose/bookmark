@@ -39,64 +39,118 @@ class Index extends Index_Data
     }
 
 
+//注册
+    public function reg()
+    {
+        $data['title'] = '注册新账号';
+
+        $this->form_validation->set_rules('email', '邮箱', 'required|valid_email');
+        $this->form_validation->set_rules('password', '密码', 'required');
+        $this->form_validation->set_rules('password2', '重复密码', 'required|matches[password]');
+        $this->form_validation->set_message('required', '{field}不能为空');
+        $this->form_validation->set_message('valid_email', '{field}格式不正确');
+        $this->form_validation->set_message('matches', '两次密码不一致');
+        if ($this->form_validation->run() === FALSE) {
+            $this->load->view('templates/public_header', $data);
+            $this->load->view('index/reg', $data);
+            $this->load->view('templates/footer');
+        } else {
+            $email = checkinput('email', $this->input->post('email'), 5, 100);
+            $password = checkinput('pwd', $this->input->post('password'), 6, 30);
+            $password2 = checkinput('pwd', $this->input->post('password2'), 6, 30);
+            if ($email == '') {
+                $_SESSION['err_msg'] = err_msg("邮箱格式不正确");
+                redirect('index/reg');
+            }
+            elseif($password == ''){
+                $_SESSION['err_msg'] = err_msg("密码输入不符合要求");
+                redirect('index/reg');
+            }
+            elseif($password!=$password2){
+                $_SESSION['err_msg'] = err_msg("两次密码不一致");
+                redirect('index/reg');
+            }
+            else {
+                if ($this->all_model->general_get_amount('xz_teachers', array("email" => $email)) > 0) {
+                    $_SESSION['err_msg'] = err_msg("该邮箱已被注册");
+                    redirect('index/reg');
+                } else {
+                    $update_arr = array();
+                    $update_arr['name']=rand_name().rand_str(3).mt_rand(100,999);
+                    $update_arr['email']=$email;
+                    $update_arr['password']=md5($password);
+                    $update_arr['employed']=0;
+                    $update_arr['createtime']=date("Y-m-d H:i:s");
+                    $this->all_model->general_insert("xz_teachers", $update_arr);
+                    $_SESSION['err_msg'] = err_msg("注册成功，请登录");
+                    redirect('index/login');
+                }
+            }
+        }
+    }
+
 //老师和学生登入
     public function login()
     {
         $data['title'] = '登陆';
 
-        $this->form_validation->set_rules('name', '姓名', 'required');
+        $this->form_validation->set_rules('email', '邮箱', 'required');
         $this->form_validation->set_rules('password', '密码', 'required');
 
         if ($this->form_validation->run() === FALSE) {
+            $this->load->view('templates/public_header', $data);
             $this->load->view('index/login', $data);
             $this->load->view('templates/footer');
         } else {
-                $data['teacher_item'] = $this->all_model->login();
-                if ($data['teacher_item'] != NULL) {
-                    if ($data['teacher_item']['employed'] == 0) {
-                        $_SESSION['login'] = "yes";
-                        $_SESSION['teacher_id'] = $data['teacher_item']['id'];
-                        redirect('user/home');
-                    } else {
-                        $this->load->view('index/login', $data);
-                        $this->load->view('templates/footer');
-                    }
+            $email = $this->input->post('email');
+            $password = md5($this->input->post('password'));
+            $data['teacher_item'] = $this->all_model->general_get("xz_teachers", array("email" => $email, "password" => $password, "employed" => 0));
+            if ($data['teacher_item'] != NULL) {
+                if ($data['teacher_item']['employed'] == 0) {
+                    $_SESSION['login'] = "yes";
+                    $_SESSION['teacher_id'] = $data['teacher_item']['id'];
+                    redirect('user/home');
                 } else {
+                    $this->load->view('templates/public_header', $data);
                     $this->load->view('index/login', $data);
                     $this->load->view('templates/footer');
                 }
+            } else {
+                $this->load->view('templates/public_header', $data);
+                $this->load->view('index/login', $data);
+                $this->load->view('templates/footer');
+            }
         }
     }
 
 
 //教师登出
-    public function teacher_logout()
+    public function logout()
     {
         $data['title'] = '已登出';
         unset($_SESSION['login']);
         unset($_SESSION['teacher_id']);
+        $this->load->view('templates/public_header', $data);
         $this->load->view('index/login', $data);
         $this->load->view('templates/footer');
     }
 
 //公开书签
-    public function bookmark($email=null)
+    public function bookmark($email = null)
     {
         $data['teachers'] = $this->all_model->general_select("xz_teachers", "id,name", array("employed" => 0));
-        if ($email==null){
+        if ($email == null) {
             $data['title'] = '公开书签';
             $sql = "select * from xz_bookmark where is_private=0 order by tag desc";
-        }
-        else{
-            $teacher = $this->all_model->general_get("xz_teachers",array("email"=>$email));
-            if ($teacher==null){
+        } else {
+            $teacher = $this->all_model->general_get("xz_teachers", array("email" => $email));
+            if ($teacher == null) {
                 $data['title'] = '公开书签';
                 $sql = "select * from xz_bookmark where is_private=0 order by tag desc";
                 $_SESSION['err_msg'] = err_msg("不存在该用户！将显示所有公开书签");
-            }
-            else{
-                $data['title'] = $teacher['name'].'的公开书签';
-                $teacher_id=$teacher['id'];
+            } else {
+                $data['title'] = $teacher['name'] . '的公开书签';
+                $teacher_id = $teacher['id'];
                 $sql = "select * from xz_bookmark where is_private=0 and teacher_id='$teacher_id' order by tag desc";
             }
 

@@ -10,22 +10,6 @@ class All_model extends CI_Model
 
 
 
-    //老师登录
-    public function login()
-    {
-        $name = $this->input->post('name');
-        $password = md5($this->input->post('password'));
-        if ($name === FALSE || $this->input->post('password') === FALSE) {
-            redirect('login/');
-        }
-        $sql = "select * from xz_teachers where employed=0 and `name`='$name' and `password`='$password'";
-        $query = $this->db->query($sql);
-        //echo $this->db->last_query();    //这句话可以显示上一步执行的sql语句
-        //die;
-        return $query->row_array();
-    }
-
-
 //修改教师密码
     public function update_teacher_pwd()
     {

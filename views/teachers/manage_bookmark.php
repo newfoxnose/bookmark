@@ -1,7 +1,9 @@
 <div class="container">
     <h2><?php echo $title; ?>
         <span class="pull-right small">
-<a href="<?php echo site_url('user/import/'); ?>">导入</a>|<a href="<?php echo site_url('user/manage_folder/'); ?>">目录</a>
+            <a href="<?php echo site_url('user/import/'); ?>">导入</a>
+            |
+            <a href="<?php echo site_url('user/manage_folder/'); ?>">目录</a>
         </span>
     </h2>
     <table class="table table-bordered table-striped">
@@ -57,12 +59,15 @@
         </tr>
         </form>
         <?php
-        $i=1;
+        $i = 1;
         foreach ($bookmark as $item):
             ?>
             <?php echo form_open('user/manage_bookmark/', array('class' => 'form-horizontal', 'role' => 'form')); ?>
             <tr>
-                <td><a name="<?php echo $item['id']; ?>"></a><?php echo $i; ?><input type="hidden" name="id" class="form-control" value="<?php echo $item['id']; ?>"></td>
+                <td><a name="<?php echo $item['id']; ?>"></a><?php echo $i; ?><input type="hidden" name="id"
+                                                                                     class="form-control"
+                                                                                     value="<?php echo $item['id']; ?>">
+                </td>
                 <td>
                     <input type="text" name="title" class="form-control" value="<?php echo $item['title']; ?>"></td>
                 <td>
@@ -101,11 +106,13 @@
                 </td>
                 <td>
                     <button type="submit" name="submit" value="update" class="btn btn-success">修改</button>
-                    <button type="submit" name="submit" value="delete" class="btn btn-success" onclick="javascript:return del();">删除</button>
+                    <button type="submit" name="submit" value="delete" class="btn btn-success"
+                            onclick="javascript:return del();">删除
+                    </button>
                 </td>
             </tr>
             </form>
-        <?php
+            <?php
             $i++;
         endforeach;
         ?>

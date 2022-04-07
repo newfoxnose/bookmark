@@ -67,7 +67,7 @@
                 </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="<?php echo site_url('index/teacher_logout'); ?>"><span
+                <li><a href="<?php echo site_url('index/logout'); ?>"><span
                                 class="glyphicon glyphicon-log-in"></span>&nbsp;&nbsp;退出</a>
                 </li>
             </ul>

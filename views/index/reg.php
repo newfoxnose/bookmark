@@ -5,23 +5,28 @@
 
         <?php echo validation_errors(); ?>
 
-        <?php echo form_open('index/login/', array('class' => 'form-horizontal', 'role' => 'form')); ?>
-
+        <?php echo form_open('index/reg/', array('class' => 'form-horizontal', 'role' => 'form')); ?>
         <div class="form-group">
             <label for="email" class="col-sm-2 control-label">邮箱</label>
             <div class="col-sm-10">
-                <input type="email" class="form-control" id="email" name="email" placeholder="请输入注册邮箱">
+                <input type="email" class="form-control" id="email" name="email" placeholder="请输入注册邮箱（5至100个字符）">
             </div>
         </div>
         <div class="form-group">
             <label for="password" class="col-sm-2 control-label">密码</label>
             <div class="col-sm-10">
-                <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码">
+                <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码（6至30个字符）">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="password2" class="col-sm-2 control-label">重复密码</label>
+            <div class="col-sm-10">
+                <input type="password" class="form-control" id="password2" name="password2" placeholder="请重复输入密码">
             </div>
         </div>
         <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" name="submit" class="btn btn-success">登录</button>
+                <button type="submit" name="submit" class="btn btn-success">注册</button>
             </div>
         </div>
         <div class="form-group hide">

@@ -47,6 +47,9 @@
         color:#fff;
         background: #007aff;
     }
+    .footer{
+        text-align: center;
+    }
 </style>
 <script>
     function del() {
@@ -68,5 +71,11 @@
         onResize();
     })
 </script>
+<div class="footer">
+    <hr>
+    <p>
+        Copyright 2022 <a href="/">书签网</a>
+    </p>
+</div>
 </body>
 </html>
