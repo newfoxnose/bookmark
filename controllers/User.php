@@ -16,10 +16,10 @@ class User extends User_Data
         $month = isset($month) ? $month : date("m");
 
         $data = $this->general_data;
-        $data['teacher'] = $this->all_model->general_get("xz_teachers", array("id" => $_SESSION['teacher_id']));
+        $data['teacher'] = $this->all_model->general_get("bm_user", array("id" => $_SESSION['teacher_id']));
         $data['title'] = '行事历';
 
-        $data['personal_events'] = $this->all_model->general_list("xz_personal_events", array("teacher_id" => $_SESSION['teacher_id'], "date_format(date,'%Y-%m')" => date("Y-m", strtotime($year . "-" . $month))));
+        $data['personal_events'] = $this->all_model->general_list("bm_events", array("teacher_id" => $_SESSION['teacher_id'], "date_format(date,'%Y-%m')" => date("Y-m", strtotime($year . "-" . $month))));
 
         $data['name'] = $data['teacher_item']['name'];
 
@@ -36,7 +36,7 @@ class User extends User_Data
                     $update_arr[$x_key] = $x_value;
                 }
             endforeach;
-            $this->all_model->general_update("xz_teachers", $update_arr, array("id" => $_SESSION['teacher_id']));
+            $this->all_model->general_update("bm_user", $update_arr, array("id" => $_SESSION['teacher_id']));
             redirect('user/home/');
         }
 
@@ -49,7 +49,7 @@ class User extends User_Data
 //在登录后首页删除个人记事
     public function delete_personal_event($id, $year = null, $month = null)
     {
-        $this->all_model->general_delete("xz_personal_events", array("id" => $id));
+        $this->all_model->general_delete("bm_events", array("id" => $id));
         redirect('user/home/' . $year . '/' . $month);
     }
 
@@ -68,7 +68,7 @@ class User extends User_Data
             $update_arr['date'] = $this->input->post('date');
             $update_arr['content'] = $this->input->post('content');
             $update_arr['teacher_id'] = $_SESSION['teacher_id'];
-            $this->all_model->general_insert("xz_personal_events", $update_arr);
+            $this->all_model->general_insert("bm_events", $update_arr);
             redirect('user/home/' . date("Y", strtotime($update_arr['date'])) . '/' . date("m", strtotime($update_arr['date'])));
         }
     }
@@ -90,7 +90,7 @@ class User extends User_Data
         $update_arr = array(
             'rt_note' => $this->input->post('content')
         );
-        $this->all_model->general_update("xz_teachers", $update_arr, array("id" => $_SESSION['teacher_id']));
+        $this->all_model->general_update("bm_user", $update_arr, array("id" => $_SESSION['teacher_id']));
         echo "saved";
     }
 
@@ -100,31 +100,31 @@ class User extends User_Data
     {
         $data = $this->general_data;
         $data['title'] = '我的收藏夹';
-        $data['folder'] = $this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
         for ($i = 0; $i < count($data['folder']); $i++) {
-            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
+            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
         }
         $data['folder'][] = array("id" => "0", "folder_name" => "根目录");   //不能直接放到第一位
         array_unshift($data['folder'], array_pop($data['folder']));         //把最后一个元素移到第一位
 
         $data['bookmark']=array();
-        $data['bookmark'][]=$this->all_model->general_list("xz_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
-        $folder0=$this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        $data['bookmark'][]=$this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+        $folder0=$this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
         foreach($folder0 as $item0){
             $data['bookmark'][$item0['folder_name']]=array();
-            $data['bookmark'][$item0['folder_name']][]=$this->all_model->general_list("xz_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>$item0['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+            $data['bookmark'][$item0['folder_name']][]=$this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>$item0['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
             $father_id1=$item0['id'];
-            $folder1=$this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $father_id1), array("convert(folder_name using gbk)" => "asc"));
+            $folder1=$this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $father_id1), array("convert(folder_name using gbk)" => "asc"));
             foreach ($folder1 as $item1){
                 $data['bookmark'][$item0['folder_name']][$item1['folder_name']]=array();
-                $data['bookmark'][$item0['folder_name']][$item1['folder_name']][]=$this->all_model->general_list("xz_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>$item1['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+                $data['bookmark'][$item0['folder_name']][$item1['folder_name']][]=$this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>$item1['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
             }
         }
 
 
 /*
         $temp_id = $_SESSION["teacher_id"];
-        $sql = "select * from xz_bookmark where is_private=0 or (is_private=1 and teacher_id='$temp_id') order by tag desc";
+        $sql = "select * from bm_bookmark where is_private=0 or (is_private=1 and teacher_id='$temp_id') order by tag desc";
         $query = $this->db->query($sql);
         $data['bookmark'] = $query->result_array();
 */
@@ -139,11 +139,11 @@ class User extends User_Data
     {
         $data = $this->general_data;
         $data['title'] = $data['teacher_item']['name'] . '的书签';
-        $data['bookmark'] = $this->all_model->general_list("xz_bookmark", array("teacher_id" => $_SESSION['teacher_id']), array("folder_id" => "desc", "tag" => "desc", "convert(title using gbk)" => "asc"));
-        $data['tag'] = $this->all_model->general_select("xz_bookmark", "tag", array("teacher_id" => $_SESSION['teacher_id'], "tag!=" => ""), null, null, "tag");
-        $data['folder'] = $this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        $data['bookmark'] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id']), array("folder_id" => "desc", "tag" => "desc", "convert(title using gbk)" => "asc"));
+        $data['tag'] = $this->all_model->general_select("bm_bookmark", "tag", array("teacher_id" => $_SESSION['teacher_id'], "tag!=" => ""), null, null, "tag");
+        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
         for ($i = 0; $i < count($data['folder']); $i++) {
-            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
+            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
         }
         $data['folder'][] = array("id" => "0", "folder_name" => "根目录");   //不能直接放到第一位
         array_unshift($data['folder'], array_pop($data['folder']));         //把最后一个元素移到第一位
@@ -168,11 +168,11 @@ class User extends User_Data
                 if (check_remote_file_exists($paresed_url['scheme'].'://'.$paresed_url['host'].'/favicon.ico')){
                     $update_arr["icon_uri"] = $paresed_url['scheme'].'://'.$paresed_url['host'].'/favicon.ico';
                 }
-                $this->all_model->general_insert("xz_bookmark", $update_arr);
+                $this->all_model->general_insert("bm_bookmark", $update_arr);
             } elseif ($this->input->post('submit') == "update") {
-                $this->all_model->general_update("xz_bookmark", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+                $this->all_model->general_update("bm_bookmark", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
             } elseif ($this->input->post('submit') == "delete") {
-                $this->all_model->general_delete("xz_bookmark", array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+                $this->all_model->general_delete("bm_bookmark", array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
             }
             redirect('user/manage_bookmark/#'.$this->input->post('id'));
         }
@@ -183,9 +183,9 @@ class User extends User_Data
     public function list_documents($grade = "-", $subject_id = "-", $category_id = "-", $page = 0)
     {
         $data = $this->general_data;
-        $data['subjects'] = $this->all_model->general_list("xz_subjects", array("id!=" => "-1"), array("sort" => "desc"));
+        $data['subjects'] = $this->all_model->general_list("bm_subjects", array("id!=" => "-1"), array("sort" => "desc"));
         array_unshift($data['subjects'], array("id" => "-", "name" => "全部"));
-        $data['document_categories'] = $this->all_model->general_load2('xz_document_categories', array("sort" => "DESC"));
+        $data['document_categories'] = $this->all_model->general_load2('bm_document_categories', array("sort" => "DESC"));
         array_unshift($data['document_categories'], array("id" => "-", "name" => "全部"));
         $data['grades'] = GRADE_ARR;
         array_unshift($data['grades'], "-");
@@ -204,13 +204,13 @@ class User extends User_Data
         $where_arr["is_private"] = 0;
         $limit = 50;
 
-        $data['documents'] = $this->all_model->general_page_list("xz_documents", $where_arr, array("folder" => "desc"), $limit, $page, null);
+        $data['documents'] = $this->all_model->general_page_list("bm_documents", $where_arr, array("folder" => "desc"), $limit, $page, null);
 
         $data['category_id'] = $category_id;
         $data['grade'] = $grade;
         $data['subject_id'] = $subject_id;
 
-        $data['teachers'] = $this->all_model->general_select("xz_teachers", "id,name", array("employed" => 0));
+        $data['teachers'] = $this->all_model->general_select("bm_user", "id,name", array("employed" => 0));
         $data['teacher_arr'] = array();
         foreach ($data['teachers'] as $item):
             $data['teacher_arr'][$item['id']] = $item['name'];
@@ -222,7 +222,7 @@ class User extends User_Data
         $data['curent_page'] = $page;
         $this->load->library('pagination');
         $config['base_url'] = site_url('user/list_documents/' . $grade . '/' . $subject_id . '/' . $category_id);
-        $config['total_rows'] = $this->all_model->general_get_amount('xz_documents', array('is_private' => 0), null);
+        $config['total_rows'] = $this->all_model->general_get_amount('bm_documents', array('is_private' => 0), null);
         $config['per_page'] = $limit;
         $config['full_tag_open'] = '<ul class="pagination">';
         $config['full_tag_close'] = '</ul>';
@@ -251,9 +251,9 @@ class User extends User_Data
     public function my_documents($grade = "-", $subject_id = "-", $category_id = "-", $page = 0)
     {
         $data = $this->general_data;
-        $data['subjects'] = $this->all_model->general_list("xz_subjects", array("id!=" => "-1"), array("sort" => "desc"));
+        $data['subjects'] = $this->all_model->general_list("bm_subjects", array("id!=" => "-1"), array("sort" => "desc"));
         array_unshift($data['subjects'], array("id" => "-", "name" => "全部"));
-        $data['document_categories'] = $this->all_model->general_load2('xz_document_categories', array("sort" => "DESC"));
+        $data['document_categories'] = $this->all_model->general_load2('bm_document_categories', array("sort" => "DESC"));
         array_unshift($data['document_categories'], array("id" => "-", "name" => "全部"));
         $data['grades'] = GRADE_ARR;
         array_unshift($data['grades'], "-");
@@ -273,7 +273,7 @@ class User extends User_Data
 
         $limit = 50;
 
-        $data['documents'] = $this->all_model->general_page_list("xz_documents", $where_arr, array("folder" => "desc"), $limit, $page, null);
+        $data['documents'] = $this->all_model->general_page_list("bm_documents", $where_arr, array("folder" => "desc"), $limit, $page, null);
 
         $data['category_id'] = $category_id;
         $data['grade'] = $grade;
@@ -283,7 +283,7 @@ class User extends User_Data
         $data['curent_page'] = $page;
         $this->load->library('pagination');
         $config['base_url'] = site_url('user/my_documents/' . $grade . '/' . $subject_id . '/' . $category_id);
-        $config['total_rows'] = $this->all_model->general_get_amount('xz_documents', array('upload_teacher_id' => $_SESSION['teacher_id']), null);
+        $config['total_rows'] = $this->all_model->general_get_amount('bm_documents', array('upload_teacher_id' => $_SESSION['teacher_id']), null);
         $config['per_page'] = $limit;
         $config['full_tag_open'] = '<ul class="pagination">';
         $config['full_tag_close'] = '</ul>';
@@ -312,8 +312,8 @@ class User extends User_Data
     {
         $data = $this->general_data;
         $data['title'] = "上传公共文档";
-        $data['document_categories'] = $this->all_model->general_load2('xz_document_categories', array("sort" => "DESC"));
-        $data['subjects'] = $this->all_model->general_list("xz_subjects", array("id!=" => "-1"), array("sort" => "desc"));
+        $data['document_categories'] = $this->all_model->general_load2('bm_document_categories', array("sort" => "DESC"));
+        $data['subjects'] = $this->all_model->general_list("bm_subjects", array("id!=" => "-1"), array("sort" => "desc"));
         $this->form_validation->set_rules('userfile', '文档', 'required');
 
         if ($this->input->post('submit') == "提交") {
@@ -366,7 +366,7 @@ class User extends User_Data
                         $this->load->view('templates/error', $error);
                     }
                 }
-                $category = $this->all_model->upload_document('xz_documents', $uploaded['orig_name'], $path, $uploaded['file_name'], $uploaded['file_ext']);
+                $category = $this->all_model->upload_document('bm_documents', $uploaded['orig_name'], $path, $uploaded['file_name'], $uploaded['file_ext']);
                 $category_id = $this->input->post('category_id');
                 $grade = $this->input->post('grade');
                 $subject_id = $this->input->post('subject_id');
@@ -393,8 +393,8 @@ class User extends User_Data
         $auth = new Qiniu\Auth(QINIU_ACCESSKEY, QINIU_SECRETKEY);
 
         $data['title'] = "上传公共文档";
-        $data['document_categories'] = $this->all_model->general_load2('xz_document_categories', array("sort" => "DESC"));
-        $data['subjects'] = $this->all_model->general_list("xz_subjects", array("id!=" => "-1"), array("sort" => "desc"));
+        $data['document_categories'] = $this->all_model->general_load2('bm_document_categories', array("sort" => "DESC"));
+        $data['subjects'] = $this->all_model->general_list("bm_subjects", array("id!=" => "-1"), array("sort" => "desc"));
         $this->form_validation->set_rules('userfile', '文档', 'required');
 
 
@@ -450,7 +450,7 @@ class User extends User_Data
                             echo $this->image_lib->display_errors();
                         }
                     }
-                    $category = $this->all_model->upload_document('xz_documents', $_FILES["userfile"]["name"], $thumb_path, $rndString, $name, get_extension($_FILES["userfile"]["name"]), $filesize);
+                    $category = $this->all_model->upload_document('bm_documents', $_FILES["userfile"]["name"], $thumb_path, $rndString, $name, get_extension($_FILES["userfile"]["name"]), $filesize);
                     $category_id = $this->input->post('category_id');
                     $grade = $this->input->post('grade');
                     $subject_id = $this->input->post('subject_id');
@@ -473,7 +473,7 @@ class User extends User_Data
     public function download_document($id)
     {
         $data = $this->general_data;
-        $document = $this->all_model->general_get('xz_documents', array("id" => $id));
+        $document = $this->all_model->general_get('bm_documents', array("id" => $id));
         if (($document['is_private'] == 1 && $document['upload_teacher_id'] == $_SESSION['teacher_id']) || $document['is_private'] == 0) {
             $filename = $document['path'] . $document['real_filename'];
             $out_filename = $document['original_filename'];
@@ -505,14 +505,14 @@ class User extends User_Data
         $data = $this->general_data;
         if (in_array('au_document_delete', $data['authority'])) {
             $array = array('id' => $id);
-            $data['result'] = $this->all_model->general_get('xz_documents', $array);
+            $data['result'] = $this->all_model->general_get('bm_documents', $array);
             if (is_file($data['result']['path'] . "thumb_" . $data['result']['real_filename'])) {
                 unlink($data['result']['path'] . "thumb_" . $data['result']['real_filename']);
             }
             if (is_file($data['result']['path'] . $data['result']['real_filename'])) {
                 unlink($data['result']['path'] . $data['result']['real_filename']);
             }
-            $this->all_model->general_delete("xz_documents", $array);
+            $this->all_model->general_delete("bm_documents", $array);
             redirect('user/list_documents/' . $category_id);
         } else {
             redirect('index/access_forbidden');
@@ -524,14 +524,14 @@ class User extends User_Data
     {
         $data = $this->general_data;
         $array = array('id' => $id, "upload_teacher_id" => $_SESSION['teacher_id']);
-        $data['result'] = $this->all_model->general_get('xz_documents', $array);
+        $data['result'] = $this->all_model->general_get('bm_documents', $array);
         if (is_file($data['result']['path'] . "thumb_" . $data['result']['real_filename'])) {
             unlink($data['result']['path'] . "thumb_" . $data['result']['real_filename']);
         }
         if (is_file($data['result']['path'] . $data['result']['real_filename'])) {
             unlink($data['result']['path'] . $data['result']['real_filename']);
         }
-        $this->all_model->general_delete("xz_documents", $array);
+        $this->all_model->general_delete("bm_documents", $array);
         redirect('user/my_documents/' . $grade . '/' . $subject_id . '/' . $category_id);
     }
 
@@ -541,7 +541,7 @@ class User extends User_Data
         $data = $this->general_data;
         if (in_array('au_document_delete', $data['authority'])) {
             $array = array('id' => $id);
-            $data['result'] = $this->all_model->general_get('xz_documents', $array);
+            $data['result'] = $this->all_model->general_get('bm_documents', $array);
             if (is_file($data['result']['path'] . "/thumb_" . $data['result']['rndstring'] . ".jpg")) {
                 unlink($data['result']['path'] . "/thumb_" . $data['result']['rndstring'] . ".jpg");
             }
@@ -552,7 +552,7 @@ class User extends User_Data
             $ops = $bucketManager->buildBatchDelete(QINIU_BUCKET, $keys);
             list($ret, $err) = $bucketManager->batch($ops);
 
-            $this->all_model->general_delete("xz_documents", $array);
+            $this->all_model->general_delete("bm_documents", $array);
             redirect('user/list_documents/' . $grade . '/' . $subject_id . '/' . $category_id);
         } else {
             redirect('index/access_forbidden');
@@ -565,7 +565,7 @@ class User extends User_Data
     {
         $data = $this->general_data;
         $array = array('id' => $id, "upload_teacher_id" => $_SESSION['teacher_id']);
-        $data['result'] = $this->all_model->general_get('xz_documents', $array);
+        $data['result'] = $this->all_model->general_get('bm_documents', $array);
         if (is_file($data['result']['path'] . "/thumb_" . $data['result']['rndstring'] . ".jpg")) {
             unlink($data['result']['path'] . "/thumb_" . $data['result']['rndstring'] . ".jpg");
         }
@@ -576,7 +576,7 @@ class User extends User_Data
         $ops = $bucketManager->buildBatchDelete(QINIU_BUCKET, $keys);
         list($ret, $err) = $bucketManager->batch($ops);
 
-        $this->all_model->general_delete("xz_documents", $array);
+        $this->all_model->general_delete("bm_documents", $array);
         redirect('user/my_documents/' . $grade . '/' . $subject_id . '/' . $category_id);
     }
 
@@ -585,9 +585,9 @@ class User extends User_Data
     {
         $data = $this->general_data;
         $where_arr = array('id' => $id, "upload_teacher_id" => $_SESSION['teacher_id']);
-        $data['document'] = $this->all_model->general_get('xz_documents', $where_arr);
-        $data['document_categories'] = $this->all_model->general_load2('xz_document_categories', array("sort" => "DESC"));
-        $data['subjects'] = $this->all_model->general_list("xz_subjects", array("id!=" => "-1"), array("sort" => "desc"));
+        $data['document'] = $this->all_model->general_get('bm_documents', $where_arr);
+        $data['document_categories'] = $this->all_model->general_load2('bm_document_categories', array("sort" => "DESC"));
+        $data['subjects'] = $this->all_model->general_list("bm_subjects", array("id!=" => "-1"), array("sort" => "desc"));
         $data['title'] = '编辑文档属性';
         $data['category_id'] = $category_id;
         $data['grade'] = $grade;
@@ -607,7 +607,7 @@ class User extends User_Data
                     $update_arr[$x_key] = $x_value;
                 }
             endforeach;
-            $this->all_model->general_update("xz_documents", $update_arr, $where_arr);
+            $this->all_model->general_update("bm_documents", $update_arr, $where_arr);
             redirect('user/my_documents/' . $grade . '/' . $subject_id . '/' . $category_id);
         }
     }
@@ -728,7 +728,7 @@ class User extends User_Data
     {
         $data = $this->general_data;
         require_authority(array("au_teacher_manage"), $data['authority']);
-        $data['teacher'] = $this->all_model->general_get("xz_teachers", array("id" => $id));
+        $data['teacher'] = $this->all_model->general_get("bm_user", array("id" => $id));
         $data['counties'] = $this->all_model->general_load("xz_counties", "sort", "desc");
         $data['parties'] = $this->all_model->general_load("xz_parties", "sort", "desc");
         $data['education'] = $this->all_model->general_load("xz_education", "sort", "desc");
@@ -736,7 +736,7 @@ class User extends User_Data
         $data['certification'] = $this->all_model->general_load("xz_certification", "sort", "desc");
         $data['titles'] = $this->all_model->general_load("xz_titles", "sort", "desc");
         $data['ethnicity'] = $this->all_model->general_load("xz_ethnicity", "sort", "desc");
-        $data['subjects'] = $this->all_model->general_list("xz_subjects", array("id!=" => "-1"), array("sort" => "desc"));
+        $data['subjects'] = $this->all_model->general_list("bm_subjects", array("id!=" => "-1"), array("sort" => "desc"));
         $data['phases'] = $this->all_model->general_load("xz_phases", "sort", "desc");
         $data['mandarin_level'] = $this->all_model->general_load("xz_mandarin_level", "sort", "desc");
         $data['pc_level'] = $this->all_model->general_load("xz_pc_level", "sort", "desc");
@@ -767,7 +767,7 @@ class User extends User_Data
                     $update_arr[$x_key] = $x_value;
                 }
             endforeach;
-            $this->all_model->general_update("xz_teachers", $update_arr, array("id" => $this->input->post('teacher_id')));
+            $this->all_model->general_update("bm_user", $update_arr, array("id" => $this->input->post('teacher_id')));
             $_SESSION['err_msg'] = err_msg("修改成功！");
             redirect('user/edit_teacher/' . $id);
             //redirect('user/list_teachers/');
@@ -779,7 +779,7 @@ class User extends User_Data
     public function self_edit_teacher()
     {
         $data = $this->general_data;
-        $data['teacher'] = $this->all_model->general_get("xz_teachers", array("id" => $_SESSION['teacher_id']));
+        $data['teacher'] = $this->all_model->general_get("bm_user", array("id" => $_SESSION['teacher_id']));
         $data['title'] = "编辑个人资料";
         $this->form_validation->set_rules('teacher_id', 'id', 'required');
 
@@ -797,16 +797,16 @@ class User extends User_Data
                     $update_arr[$x_key] = $x_value;
                 }
             endforeach;
-            if ($this->all_model->general_get_amount('xz_teachers', array("id!="=>$_SESSION['teacher_id'],"name"=>$this->input->post('name')))>0){
+            if ($this->all_model->general_get_amount('bm_user', array("id!="=>$_SESSION['teacher_id'],"name"=>$this->input->post('name')))>0){
                 $_SESSION['err_msg'] = err_msg("已存在相同昵称！");
             }
-            elseif($this->all_model->general_get_amount('xz_teachers', array("id!="=>$_SESSION['teacher_id'],"email"=>$this->input->post('email')))>0){
+            elseif($this->all_model->general_get_amount('bm_user', array("id!="=>$_SESSION['teacher_id'],"email"=>$this->input->post('email')))>0){
                 $_SESSION['err_msg'] = err_msg("已存在相同电子邮件！");
             }
             else{
-                $this->all_model->general_update("xz_teachers", $update_arr, array("id" => $_SESSION['teacher_id']));
+                $this->all_model->general_update("bm_user", $update_arr, array("id" => $_SESSION['teacher_id']));
             }
-            redirect('user/self_edit_teacher/');
+            redirect('user/self_edit_teacher');
         }
     }
 
@@ -845,14 +845,14 @@ class User extends User_Data
             endforeach;
             $update_arr["identity_number"] = str_replace("x", "X", $this->input->post('identity_number'));
             $update_arr["createtime"] = date("Y-m-d H:i:s");
-            $this->all_model->general_insert("xz_teachers", $update_arr);
+            $this->all_model->general_insert("bm_user", $update_arr);
             redirect('user/list_custom_teachers/0');
         }
     }
 
 
-//修改教师密码
-    public function teacher_pwd($result = NULL)
+//修改密码
+    public function pwd($result = NULL)
     {
         $data = $this->general_data;
         $data['name'] = $data['teacher_item']['name'];
@@ -863,13 +863,13 @@ class User extends User_Data
         //var_dump($this->form_validation->run());
         if ($this->form_validation->run() === FALSE) {
             $this->load->view('templates/header', $data);
-            $this->load->view('teachers/teacher_pwd', $data);
+            $this->load->view('teachers/pwd', $data);
             $this->load->view('templates/footer');
         } else {
-            if ($this->all_model->update_teacher_pwd() == "error") {
-                redirect('user/teacher_pwd/fail');
+            if ($this->all_model->update_pwd() == "error") {
+                redirect('user/pwd/fail');
             } else {
-                redirect('user/teacher_pwd/success');
+                redirect('user/pwd/success');
             }
         }
     }
@@ -891,10 +891,10 @@ class User extends User_Data
     public function manage_folder()
     {
         $data = $this->general_data;
-        $data['select_folder'] = $this->all_model->general_select("xz_folder", "id,folder_name", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1));
-        $data['folder'] = $this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        $data['select_folder'] = $this->all_model->general_select("bm_folder", "id,folder_name", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1));
+        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
         for ($i = 0; $i < count($data['folder']); $i++) {
-            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
+            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
         }
         $data['title'] = '管理目录';
         $this->form_validation->set_rules('submit', 'submit', 'required');
@@ -914,44 +914,44 @@ class User extends User_Data
             endforeach;
             $update_arr["teacher_id"] = $_SESSION['teacher_id'];
             if ($this->input->post('submit') == "add_folder") {   //添加一级目录
-                if ($this->all_model->general_get_amount('xz_folder', array("teacher_id"=>$_SESSION['teacher_id'],"folder_name"=>$this->input->post('folder_name')))>0){
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id"=>$_SESSION['teacher_id'],"folder_name"=>$this->input->post('folder_name')))>0){
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
                 }
                 else{
                     $update_arr["father_id"] = -1;
-                    $this->all_model->general_insert('xz_folder', $update_arr);
+                    $this->all_model->general_insert('bm_folder', $update_arr);
                 }
             } elseif ($this->input->post('submit') == "add_subfolder") {     //添加二级目录
-                if ($this->all_model->general_get_amount('xz_folder', array("teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$this->input->post('father_id'),"folder_name"=>$this->input->post('folder_name')))>0){
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$this->input->post('father_id'),"folder_name"=>$this->input->post('folder_name')))>0){
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
                 }
                 else{
-                    $this->all_model->general_insert('xz_folder', $update_arr);
+                    $this->all_model->general_insert('bm_folder', $update_arr);
                 }
             } elseif ($this->input->post('submit') == "delete_subfolder") {     //删除二级目录
-                $this->all_model->general_delete('xz_bookmark', array("folder_id" => $this->input->post('id'),"teacher_id"=>$_SESSION['teacher_id']));
-                $this->all_model->general_delete('xz_folder', array("id" => $this->input->post('id'),"teacher_id"=>$_SESSION['teacher_id']));
+                $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'),"teacher_id"=>$_SESSION['teacher_id']));
+                $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'),"teacher_id"=>$_SESSION['teacher_id']));
             } elseif ($this->input->post('submit') == "delete_folder") {       //删除一级目录
                 //先要遍历子目录的id再删
-                $sub_folder=$this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $this->input->post('id')));
+                $sub_folder=$this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $this->input->post('id')));
                 foreach($sub_folder as $item){
-                    $this->all_model->general_delete('xz_bookmark', array("folder_id" => $item['id'],"teacher_id"=>$_SESSION['teacher_id']));
-                    $this->all_model->general_delete('xz_folder', array("id" => $item['id'],"teacher_id"=>$_SESSION['teacher_id']));
+                    $this->all_model->general_delete('bm_bookmark', array("folder_id" => $item['id'],"teacher_id"=>$_SESSION['teacher_id']));
+                    $this->all_model->general_delete('bm_folder', array("id" => $item['id'],"teacher_id"=>$_SESSION['teacher_id']));
                 }
-                $this->all_model->general_delete('xz_folder', array("id" => $this->input->post('id'),"teacher_id"=>$_SESSION['teacher_id']));
+                $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'),"teacher_id"=>$_SESSION['teacher_id']));
             } elseif ($this->input->post('submit') == "update_subfolder") {              //修改二级目录
-                if ($this->all_model->general_get_amount('xz_folder', array("teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$this->input->post('father_id'),"folder_name"=>$this->input->post('folder_name')))>0){
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$this->input->post('father_id'),"folder_name"=>$this->input->post('folder_name')))>0){
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
                 }
                 else {
-                    $this->all_model->general_update("xz_folder", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+                    $this->all_model->general_update("bm_folder", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
                 }
             } else {     //修改一级目录
-                if ($this->all_model->general_get_amount('xz_folder', array("teacher_id"=>$_SESSION['teacher_id'],"father_id"=>-1,"folder_name"=>$this->input->post('folder_name')))>0){
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id"=>$_SESSION['teacher_id'],"father_id"=>-1,"folder_name"=>$this->input->post('folder_name')))>0){
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
                 }
                 else {
-                    $this->all_model->general_update("xz_folder", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+                    $this->all_model->general_update("bm_folder", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
                 }
             }
             redirect('user/manage_folder/');
@@ -964,7 +964,7 @@ class User extends User_Data
         $this->load->library("phpexcel");
 
         $data['title'] = '导入浏览器收藏夹';
-        $data['folder'] = $this->all_model->general_list("xz_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1));
+        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1));
         $this->form_validation->set_rules('json_string', '文件', 'required');
         $data['output']=array();
         if ($_POST["submit"] != "submit") {
@@ -980,9 +980,9 @@ class User extends User_Data
                 if (is_bookmark_folder($arr[$root_name][$i])) {
                     $root_name1 = array_key_first($arr[$root_name][$i]);
                     //echo $root_name1 . "<br>";
-                    $tmp1=$this->all_model->general_select("xz_folder", "id", array("folder_name"=>$root_name1,"teacher_id"=>$_SESSION['teacher_id']));
+                    $tmp1=$this->all_model->general_select("bm_folder", "id", array("folder_name"=>$root_name1,"teacher_id"=>$_SESSION['teacher_id']));
                     if ($tmp1==null){
-                        $folder_id1=$this->all_model->general_insert('xz_folder', array("folder_name"=>$root_name1,"teacher_id"=>$_SESSION['teacher_id']));
+                        $folder_id1=$this->all_model->general_insert('bm_folder', array("folder_name"=>$root_name1,"teacher_id"=>$_SESSION['teacher_id']));
                         $data['output'][]="目录[".$root_name1."]插入成功";
                     }
                     else{
@@ -993,9 +993,9 @@ class User extends User_Data
                         if (is_bookmark_folder($arr[$root_name][$i][$root_name1][$j])) {
                             $root_name2 = array_key_first($arr[$root_name][$i][$root_name1][$j]);
                             //echo $root_name2 . "<br>";
-                            $tmp2=$this->all_model->general_select("xz_folder", "id", array("folder_name"=>$root_name2,"teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$folder_id1));
+                            $tmp2=$this->all_model->general_select("bm_folder", "id", array("folder_name"=>$root_name2,"teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$folder_id1));
                             if ($tmp2==null){
-                                $folder_id2=$this->all_model->general_insert('xz_folder', array("folder_name"=>$root_name2,"teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$folder_id1));
+                                $folder_id2=$this->all_model->general_insert('bm_folder', array("folder_name"=>$root_name2,"teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$folder_id1));
                                 $data['output'][]="目录[".$root_name2."]插入成功";
                             }
                             else{
@@ -1007,7 +1007,7 @@ class User extends User_Data
                                     //以下是三级目录，都放在根目录下，超过三级的放弃导入
                                     $root_name3=array_key_first($arr[$root_name][$i][$root_name1][$j][$root_name2][$k]);
                                     for ($l = 0; $l < count($arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3]); $l++) {
-                                            if ($this->all_model->general_get_amount("xz_bookmark", array("url"=>$arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
+                                            if ($this->all_model->general_get_amount("bm_bookmark", array("url"=>$arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
                                                 $insert_arr = array();
                                                 $insert_arr['teacher_id']=$_SESSION['teacher_id'];
                                                 $insert_arr["createtime"] = date("Y-m-d H:i:s");
@@ -1016,7 +1016,7 @@ class User extends User_Data
                                                 $insert_arr["icon"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["icon"];
                                                 $insert_arr["icon_uri"] =$arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["icon"];
                                                 $insert_arr["folder_id"] =0;
-                                                $this->all_model->general_insert('xz_bookmark', $insert_arr);
+                                                $this->all_model->general_insert('bm_bookmark', $insert_arr);
                                                 $data['output'][]= $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"] ."导入成功";
                                             }
                                             else{
@@ -1024,7 +1024,7 @@ class User extends User_Data
                                             }
                                     }
                                 } else {
-                                    if ($this->all_model->general_get_amount("xz_bookmark", array("url"=>$arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
+                                    if ($this->all_model->general_get_amount("bm_bookmark", array("url"=>$arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
                                         $insert_arr = array();
                                         $insert_arr['teacher_id']=$_SESSION['teacher_id'];
                                         $insert_arr["createtime"] = date("Y-m-d H:i:s");
@@ -1033,7 +1033,7 @@ class User extends User_Data
                                         $insert_arr["icon"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["icon"];
                                         $insert_arr["icon_uri"] =$arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["icon"];
                                         $insert_arr["folder_id"] =$folder_id2;
-                                        $this->all_model->general_insert('xz_bookmark', $insert_arr);
+                                        $this->all_model->general_insert('bm_bookmark', $insert_arr);
                                         $data['output'][]= $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["name"] ."导入成功";
                                     }
                                     else{
@@ -1042,7 +1042,7 @@ class User extends User_Data
                                 }
                             }
                         } else {
-                            if ($this->all_model->general_get_amount("xz_bookmark", array("url"=>$arr[$root_name][$i][$root_name1][$j]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
+                            if ($this->all_model->general_get_amount("bm_bookmark", array("url"=>$arr[$root_name][$i][$root_name1][$j]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
                                 $insert_arr = array();
                                 $insert_arr['teacher_id']=$_SESSION['teacher_id'];
                                 $insert_arr["createtime"] = date("Y-m-d H:i:s");
@@ -1051,7 +1051,7 @@ class User extends User_Data
                                 $insert_arr["icon"] = $arr[$root_name][$i][$root_name1][$j]["icon"];
                                 $insert_arr["icon_uri"] =$arr[$root_name][$i][$root_name1][$j]["icon"];
                                 $insert_arr["folder_id"] =$folder_id1;
-                                $this->all_model->general_insert('xz_bookmark', $insert_arr);
+                                $this->all_model->general_insert('bm_bookmark', $insert_arr);
                                 $data['output'][]= $arr[$root_name][$i][$root_name1][$j]["name"] ."导入成功";
                             }
                             else{
@@ -1060,7 +1060,7 @@ class User extends User_Data
                         }
                     }
                 } else {
-                    if ($this->all_model->general_get_amount("xz_bookmark", array("url"=>$arr[$root_name][$i]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
+                    if ($this->all_model->general_get_amount("bm_bookmark", array("url"=>$arr[$root_name][$i]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
                         $insert_arr = array();
                         $insert_arr['teacher_id']=$_SESSION['teacher_id'];
                         $insert_arr["createtime"] = date("Y-m-d H:i:s");
@@ -1068,7 +1068,7 @@ class User extends User_Data
                         $insert_arr["url"] = $arr[$root_name][$i]["href"] ;
                         $insert_arr["icon"] = $arr[$root_name][$i]["icon"] ;
                         $insert_arr["icon_uri"] = $arr[$root_name][$i]["icon_uri"] ;
-                        $this->all_model->general_insert('xz_bookmark', $insert_arr);
+                        $this->all_model->general_insert('bm_bookmark', $insert_arr);
                         $data['output'][]= $arr[$root_name][$i]["name"]."导入成功";
                     }
                     else{

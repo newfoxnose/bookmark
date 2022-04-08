@@ -64,7 +64,7 @@ class User_Data extends MY_Controller
         if ($_SESSION['login'] != "yes") {
             redirect('index/login/');
         }
-        $data['teacher_item'] = $this->all_model->general_get("xz_teachers",array("id"=>$_SESSION['teacher_id']));
+        $data['teacher_item'] = $this->all_model->general_get("bm_user",array("id"=>$_SESSION['teacher_id']));
         if (empty($data['teacher_item'])) {
             show_404();
         }

@@ -1,5 +1,5 @@
 <div class="container">
-    <h2><?php echo $teacher_item['name']; ?>-修改密码</h2>
+    <h2>修改密码</h2>
 
 
     <?php echo validation_errors(); ?>

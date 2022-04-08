@@ -71,7 +71,7 @@ class Index extends Index_Data
                 redirect('index/reg');
             }
             else {
-                if ($this->all_model->general_get_amount('xz_teachers', array("email" => $email)) > 0) {
+                if ($this->all_model->general_get_amount('bm_user', array("email" => $email)) > 0) {
                     $_SESSION['err_msg'] = err_msg("该邮箱已被注册");
                     redirect('index/reg');
                 } else {
@@ -81,7 +81,7 @@ class Index extends Index_Data
                     $update_arr['password']=md5($password);
                     $update_arr['employed']=0;
                     $update_arr['createtime']=date("Y-m-d H:i:s");
-                    $this->all_model->general_insert("xz_teachers", $update_arr);
+                    $this->all_model->general_insert("bm_user", $update_arr);
                     $_SESSION['err_msg'] = err_msg("注册成功，请登录");
                     redirect('index/login');
                 }
@@ -104,7 +104,7 @@ class Index extends Index_Data
         } else {
             $email = $this->input->post('email');
             $password = md5($this->input->post('password'));
-            $data['teacher_item'] = $this->all_model->general_get("xz_teachers", array("email" => $email, "password" => $password, "employed" => 0));
+            $data['teacher_item'] = $this->all_model->general_get("bm_user", array("email" => $email, "password" => $password, "employed" => 0));
             if ($data['teacher_item'] != NULL) {
                 if ($data['teacher_item']['employed'] == 0) {
                     $_SESSION['login'] = "yes";
@@ -138,20 +138,20 @@ class Index extends Index_Data
 //公开书签
     public function bookmark($email = null)
     {
-        $data['teachers'] = $this->all_model->general_select("xz_teachers", "id,name", array("employed" => 0));
+        $data['teachers'] = $this->all_model->general_select("bm_user", "id,name", array("employed" => 0));
         if ($email == null) {
             $data['title'] = '公开书签';
-            $sql = "select * from xz_bookmark where is_private=0 order by tag desc";
+            $sql = "select * from bm_bookmark where is_private=0 order by tag desc";
         } else {
-            $teacher = $this->all_model->general_get("xz_teachers", array("email" => $email));
+            $teacher = $this->all_model->general_get("bm_user", array("email" => $email));
             if ($teacher == null) {
                 $data['title'] = '公开书签';
-                $sql = "select * from xz_bookmark where is_private=0 order by tag desc";
+                $sql = "select * from bm_bookmark where is_private=0 order by tag desc";
                 $_SESSION['err_msg'] = err_msg("不存在该用户！将显示所有公开书签");
             } else {
                 $data['title'] = $teacher['name'] . '的公开书签';
                 $teacher_id = $teacher['id'];
-                $sql = "select * from xz_bookmark where is_private=0 and teacher_id='$teacher_id' order by tag desc";
+                $sql = "select * from bm_bookmark where is_private=0 and teacher_id='$teacher_id' order by tag desc";
             }
 
         }
@@ -194,11 +194,11 @@ class Index extends Index_Data
             $this->load->view('templates/general_msg', $data);
         } else {
             $_SESSION['openid'] = $user_info['openid'];
-            $user = $this->all_model->general_get("xz_wx_user", array('openid' => $user_info['openid']));
+            $user = $this->all_model->general_get("bm_wx_user", array('openid' => $user_info['openid']));
             if ($user == null) {
                 $user_info['createtime'] = date("Y-m-d H:i:s");
                 unset($user_info['privilege']);
-                $this->all_model->general_insert("xz_wx_user", $user_info);
+                $this->all_model->general_insert("bm_wx_user", $user_info);
                 $data['title'] = '绑定用户';
                 $this->load->view('templates/public_header', $data);
                 $this->load->view('index/binding', $data);
@@ -210,7 +210,7 @@ class Index extends Index_Data
                 } else {
                     $data['title'] = '选择绑定';
                     if ($user['teacher_id'] != 0) {
-                        $data['teacher'] = $this->all_model->general_get("xz_teachers", array('id' => $user['teacher_id']));
+                        $data['teacher'] = $this->all_model->general_get("bm_user", array('id' => $user['teacher_id']));
                     }
                     if ($user['student_id'] != 0) {
                         $data['student'] = $this->all_model->general_get("xz_students", array('id' => $user['student_id']));
@@ -241,16 +241,16 @@ class Index extends Index_Data
             $identity_number = $this->input->post('identity_number');
             if ($this->input->post('type_select') == 0) {          //type为0表示学生
                 $student_id = $this->all_model->general_get("xz_students", array('name' => $name, 'parent_phone' => $phone, 'identity_number' => $identity_number), "id");
-                $this->all_model->general_update("xz_wx_user", array('student_id' => $student_id['id']), array('openid' => $openid));
+                $this->all_model->general_update("bm_wx_user", array('student_id' => $student_id['id']), array('openid' => $openid));
             } else if ($this->input->post('type_select') == 1) {
-                $teacher_id = $this->all_model->general_get("xz_teachers", array('name' => $name, 'phone' => $phone, 'identity_number' => $identity_number), "id");
-                $this->all_model->general_update("xz_wx_user", array('teacher_id' => $teacher_id['id']), array('openid' => $openid));
+                $teacher_id = $this->all_model->general_get("bm_user", array('name' => $name, 'phone' => $phone, 'identity_number' => $identity_number), "id");
+                $this->all_model->general_update("bm_wx_user", array('teacher_id' => $teacher_id['id']), array('openid' => $openid));
             } else {
                 redirect('index/access_forbidden');
             }
-            $user = $this->all_model->general_get("xz_wx_user", array('openid' => $openid));
+            $user = $this->all_model->general_get("bm_wx_user", array('openid' => $openid));
             if ($user['teacher_id'] != 0) {
-                $data['teacher'] = $this->all_model->general_get("xz_teachers", array('id' => $user['teacher_id']));
+                $data['teacher'] = $this->all_model->general_get("bm_user", array('id' => $user['teacher_id']));
             }
             if ($user['student_id'] != 0) {
                 $data['student'] = $this->all_model->general_get("xz_students", array('id' => $user['student_id']));
@@ -272,12 +272,12 @@ class Index extends Index_Data
         $identity_number = $this->input->post('identity_number');
         if ($this->input->post('type_select') == 0) {          //type为0表示学生
             $student_id = $this->all_model->general_get("xz_students", array('name' => $name, 'parent_phone' => $phone, 'identity_number' => $identity_number), "id");
-            $this->all_model->general_update("xz_wx_user", array('student_id' => $student_id['id']), array('openid' => $openid));
+            $this->all_model->general_update("bm_wx_user", array('student_id' => $student_id['id']), array('openid' => $openid));
             $this->load->view('templates/public_header', $data);
             $this->load->view('index/binding_select', $data);
         } else {
-            $teacher_id = $this->all_model->general_get("xz_teachers", array('name' => $name, 'phone' => $phone, 'identity_number' => $identity_number), "id");
-            $this->all_model->general_update("xz_wx_user", array('teacher_id' => $teacher_id['id']), array('openid' => $openid));
+            $teacher_id = $this->all_model->general_get("bm_user", array('name' => $name, 'phone' => $phone, 'identity_number' => $identity_number), "id");
+            $this->all_model->general_update("bm_wx_user", array('teacher_id' => $teacher_id['id']), array('openid' => $openid));
             $this->load->view('templates/public_header', $data);
             $this->load->view('index/binding_select', $data);
         }
@@ -289,7 +289,7 @@ class Index extends Index_Data
     {
         $openid = $_SESSION['openid'];
         if ($type == 0) {
-            $user = $this->all_model->general_get("xz_wx_user", array('student_id' => $id, 'openid' => $openid), "student_id");
+            $user = $this->all_model->general_get("bm_wx_user", array('student_id' => $id, 'openid' => $openid), "student_id");
             if ($user != null) {
                 $_SESSION['student_login'] = "yes";
                 $_SESSION['student_id'] = $user['student_id'];
@@ -298,7 +298,7 @@ class Index extends Index_Data
                 redirect('index/access_forbidden');
             }
         } else {
-            $user = $this->all_model->general_get("xz_wx_user", array('teacher_id' => $id, 'openid' => $openid), "teacher_id");
+            $user = $this->all_model->general_get("bm_wx_user", array('teacher_id' => $id, 'openid' => $openid), "teacher_id");
             if ($user != null) {
                 $_SESSION['login'] = "yes";
                 $_SESSION['teacher_id'] = $user['teacher_id'];
@@ -329,7 +329,7 @@ class Index extends Index_Data
 
         if ($code != "") {
 
-            //$pre_row = $this->all_model->general_get("xz_teachers", array("the_code" => $code), "identity_number,name,phone,wx_openid");
+            //$pre_row = $this->all_model->general_get("bm_user", array("the_code" => $code), "identity_number,name,phone,wx_openid");
             //if ($pre_row == null) {
             $url = "https://api.weixin.qq.com/sns/jscode2session?appid=" . $AppID . "&secret=" . $AppSecret . "&js_code=" . $code . "&grant_type=authorization_code";
 
@@ -344,9 +344,9 @@ class Index extends Index_Data
             $result = curl_exec($curl);
             curl_close($curl);
             $arr = json_decode($result, true);
-            //$binding=$this->all_model->general_get_amount("xz_teachers", array("wx_openid"=>$arr['openid']), null, null);
+            //$binding=$this->all_model->general_get_amount("bm_user", array("wx_openid"=>$arr['openid']), null, null);
             //$arr['binding']=$binding;
-            $row = $this->all_model->general_get("xz_teachers", array("wx_openid" => $arr['openid']));
+            $row = $this->all_model->general_get("bm_user", array("wx_openid" => $arr['openid']));
             $arr['wx_openid'] = $row['wx_openid'];
             $arr['id'] = $row['identity_number'];
             $arr['name'] = $row['name'];
@@ -371,7 +371,7 @@ class Index extends Index_Data
     public function txt_preview($id)
     {
         $data['title'] = '预览';
-        $document = $this->all_model->general_get('xz_documents', array("id" => $id));
+        $document = $this->all_model->general_get('bm_documents', array("id" => $id));
         $file_url = QINIU_DOMAIN . $document["path"] . "/" . $document["rndstring"] . "/" . $document["real_filename"];
         $text = file_get_contents($file_url);
         $code = chkCode($text);
@@ -390,7 +390,7 @@ class Index extends Index_Data
     public function addressbook_json($openid)
     {
         $data['title'] = '通讯录';
-        $data['teachers'] = $this->all_model->general_list("xz_teachers", array("employed" => 0), array("convert(name using gbk)" => "asc"));
+        $data['teachers'] = $this->all_model->general_list("bm_user", array("employed" => 0), array("convert(name using gbk)" => "asc"));
         for ($i = 0; $i < count($data['teachers']); $i++) {
             $data['teachers'][$i]['show'] = true;
             $data['teachers'][$i]['search'] = $data['teachers'][$i]['name'] . $data['teachers'][$i]['phone'];
@@ -401,13 +401,13 @@ class Index extends Index_Data
 //绑定微信openid
     public function binding()
     {
-        $this->all_model->general_update("xz_teachers", array("wx_openid" => ""), array("wx_openid" => $this->input->post('wx_openid')));
+        $this->all_model->general_update("bm_user", array("wx_openid" => ""), array("wx_openid" => $this->input->post('wx_openid')));
 
-        $check_binding_result = $this->all_model->general_get_amount("xz_teachers", array("employee_number" => $this->input->post('employee_number'), "name" => $this->input->post('name')), null, null);
+        $check_binding_result = $this->all_model->general_get_amount("bm_user", array("employee_number" => $this->input->post('employee_number'), "name" => $this->input->post('name')), null, null);
         if ($check_binding_result > 1) {
             echo "2";
         } else {
-            $result = $this->all_model->general_update("xz_teachers", array("wx_openid" => $this->input->post('wx_openid'), "avatar_url" => $this->input->post('avatar_url')), array("employee_number" => $this->input->post('employee_number'), "name" => $this->input->post('name')));
+            $result = $this->all_model->general_update("bm_user", array("wx_openid" => $this->input->post('wx_openid'), "avatar_url" => $this->input->post('avatar_url')), array("employee_number" => $this->input->post('employee_number'), "name" => $this->input->post('name')));
         }
         echo $result;
     }
@@ -415,7 +415,7 @@ class Index extends Index_Data
 //解绑微信openid
     public function undobinding()
     {
-        $result = $this->all_model->general_update("xz_teachers", array("wx_openid" => ""), array("wx_openid" => $this->input->post('wx_openid')));
+        $result = $this->all_model->general_update("bm_user", array("wx_openid" => ""), array("wx_openid" => $this->input->post('wx_openid')));
         echo $result;
     }
 

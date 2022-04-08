@@ -25,7 +25,7 @@ class Admin extends Admin_Data
     {
         $arr = array();
 
-        $arr[] = array("table_name" => "xz_document_categories", "table_chinese" => "文档分类");
+        $arr[] = array("table_name" => "bm_document_categories", "table_chinese" => "文档分类");
 
         if ($table_id == null) {
             $table_id = 0;
@@ -151,7 +151,7 @@ class Admin extends Admin_Data
             echo name_from_grade($grade);
             $data['title'] = $pre_fix . "学生列表";
 
-            $data['teachers'] = $this->all_model->general_select("xz_teachers", "id,name", null, array("employed" => array(0, 1)), array("convert(name using gbk)" => "asc"));
+            $data['teachers'] = $this->all_model->general_select("bm_user", "id,name", null, array("employed" => array(0, 1)), array("convert(name using gbk)" => "asc"));
             array_push($data['teachers'], array("id" => "0", "name" => "招生办"));
             $data['counties'] = $this->all_model->general_load("xz_counties", "sort", "desc");
             $data['occupations'] = $this->all_model->general_load("xz_occupations", "sort", "asc");
@@ -230,7 +230,7 @@ class Admin extends Admin_Data
         if (is_dir('./uploads/' . $id)) {
             rmdir('./uploads/' . $id);
         }
-        $this->all_model->general_delete("xz_teachers", array("id" => $id));
+        $this->all_model->general_delete("bm_user", array("id" => $id));
         redirect('user/list_teachers');
     }
 

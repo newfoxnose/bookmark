@@ -11,7 +11,7 @@ class All_model extends CI_Model
 
 
 //修改教师密码
-    public function update_teacher_pwd()
+    public function update_pwd()
     {
         $this->load->helper('url');
 
@@ -24,7 +24,7 @@ class All_model extends CI_Model
         } else {
             $data2 = array('password' => md5($this->input->post('pwd')));
             $this->db->where('id', $this->input->post('teacher_id'));
-            $this->db->update('xz_teachers', $data2);
+            $this->db->update('bm_user', $data2);
         }
         //echo $this->db->last_query();    //这句话可以显示上一步执行的sql语句
         //die;
@@ -56,7 +56,7 @@ class All_model extends CI_Model
             //'entrydate' => $this->input->post('entrydate')
         );
         $this->db->where('id', $this->input->post('teacher_id'));
-        $this->db->update('xz_teachers', $data);
+        $this->db->update('bm_user', $data);
         //echo $this->db->last_query();    //这句话可以显示上一步执行的sql语句
         //die;
     }
@@ -759,7 +759,7 @@ class All_model extends CI_Model
             'phone ' => $phone,
             'createtime' => date("Y-m-d H:i:sa")
         );
-        return $this->db->insert('xz_teachers', $data);
+        return $this->db->insert('bm_user', $data);
     }
 
 //导入学生
@@ -1539,7 +1539,7 @@ class All_model extends CI_Model
         $this->db->where('class=', $class);
         $this->db->where('subject_id!=', "-1");
         $this->db->from('xz_class_teachers');
-        $this->db->join('xz_subjects', 'xz_class_teachers.subject_id = xz_subjects.id');
+        $this->db->join('bm_subjects', 'xz_class_teachers.subject_id = bm_subjects.id');
         $query = $this->db->get();
         return $query->row_array();
     }
@@ -1583,7 +1583,7 @@ class All_model extends CI_Model
 
 //备用的mysql语句
 
-    //update `xz_teachers` set `contract_start` = SUBSTRING_INDEX(`contract_period`, '-', 1),`contract_end` = SUBSTRING_INDEX(`contract_period`, '-', -1)          //在mysql中拆分字符串
+    //update `bm_user` set `contract_start` = SUBSTRING_INDEX(`contract_period`, '-', 1),`contract_end` = SUBSTRING_INDEX(`contract_period`, '-', -1)          //在mysql中拆分字符串
     /////////////////////
 }
 

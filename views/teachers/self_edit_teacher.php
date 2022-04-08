@@ -8,27 +8,25 @@
 
 
     <?php echo validation_errors(); ?>
-    <?php echo form_open('user/self_edit_teacher/' . $teacher['id'], array('class' => 'form-horizontal', 'role' => 'form')); ?>
+    <?php echo form_open('user/self_edit_teacher', array('class' => 'form-horizontal', 'role' => 'form')); ?>
     <input type="hidden" name="teacher_id" value="<?php echo $teacher['id'] ?>">
-    <table class="table table-bordered table-hover table-striped text-center">
-        <tr>
-            <th>昵称</th>
-            <td>
-                <input type="text" name="name" class="form-control" value="<?php echo $teacher['name'] ?>">
-            </td>
-        </tr>
-        <tr>
-            <th>电子邮件</th>
-            <td>
-                <input type="text" name="email" class="form-control" value="<?php echo $teacher['email'] ?>">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <button type="submit" name="submit" value="submit" class="btn btn-success">修改</button>
-            </td>
-        </tr>
-    </table>
+    <div class="form-group">
+        <label for="name" class="col-sm-2 control-label">昵称</label>
+        <div class="col-sm-10">
+            <input type="text" class="form-control" name="name" id="name" value="<?php echo $teacher['name'] ?>">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="email" class="col-sm-2 control-label">邮箱</label>
+        <div class="col-sm-10">
+            <input type="email" class="form-control" name="email" id="email" value="<?php echo $teacher['email'] ?>">
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" name="submit" value="submit" class="btn btn-default">修改</button>
+        </div>
+    </div>
     </form>
 
 </div>
