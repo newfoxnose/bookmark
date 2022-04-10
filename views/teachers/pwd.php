@@ -29,7 +29,7 @@
     }
     ?>
 
-    <?php echo form_open('teacher_pwd/', array('class' => 'form-horizontal', 'role' => 'form')); ?>
+    <?php echo form_open('user/pwd/', array('class' => 'form-horizontal', 'role' => 'form')); ?>
     <input type="hidden" name="teacher_id" value="<?php echo $teacher_item['id'] ?>">
     <div class="form-group">
         <label for="pwd" class="col-sm-2 control-label">新密码</label>

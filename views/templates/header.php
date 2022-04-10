@@ -62,7 +62,7 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a href="<?php echo site_url('user/self_edit_teacher'); ?>">个人资料</a></li>
-                        <li><a href="<?php echo site_url('user/teacher_pwd'); ?>">修改密码</a></li>
+                        <li><a href="<?php echo site_url('user/pwd'); ?>">修改密码</a></li>
                     </ul>
                 </li>
             </ul>

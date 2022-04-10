@@ -107,27 +107,27 @@ class User extends User_Data
         $data['folder'][] = array("id" => "0", "folder_name" => "根目录");   //不能直接放到第一位
         array_unshift($data['folder'], array_pop($data['folder']));         //把最后一个元素移到第一位
 
-        $data['bookmark']=array();
-        $data['bookmark'][]=$this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
-        $folder0=$this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
-        foreach($folder0 as $item0){
-            $data['bookmark'][$item0['folder_name']]=array();
-            $data['bookmark'][$item0['folder_name']][]=$this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>$item0['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
-            $father_id1=$item0['id'];
-            $folder1=$this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $father_id1), array("convert(folder_name using gbk)" => "asc"));
-            foreach ($folder1 as $item1){
-                $data['bookmark'][$item0['folder_name']][$item1['folder_name']]=array();
-                $data['bookmark'][$item0['folder_name']][$item1['folder_name']][]=$this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'],'folder_id'=>$item1['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+        $data['bookmark'] = array();
+        $data['bookmark'][] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => 0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+        $folder0 = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        foreach ($folder0 as $item0) {
+            $data['bookmark'][$item0['folder_name']] = array();
+            $data['bookmark'][$item0['folder_name']][] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => $item0['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+            $father_id1 = $item0['id'];
+            $folder1 = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $father_id1), array("convert(folder_name using gbk)" => "asc"));
+            foreach ($folder1 as $item1) {
+                $data['bookmark'][$item0['folder_name']][$item1['folder_name']] = array();
+                $data['bookmark'][$item0['folder_name']][$item1['folder_name']][] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => $item1['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
             }
         }
 
 
-/*
-        $temp_id = $_SESSION["teacher_id"];
-        $sql = "select * from bm_bookmark where is_private=0 or (is_private=1 and teacher_id='$temp_id') order by tag desc";
-        $query = $this->db->query($sql);
-        $data['bookmark'] = $query->result_array();
-*/
+        /*
+                $temp_id = $_SESSION["teacher_id"];
+                $sql = "select * from bm_bookmark where is_private=0 or (is_private=1 and teacher_id='$temp_id') order by tag desc";
+                $query = $this->db->query($sql);
+                $data['bookmark'] = $query->result_array();
+        */
 
         $this->load->view('templates/header', $data);
         $this->load->view('teachers/home', $data);
@@ -164,9 +164,9 @@ class User extends User_Data
             if ($this->input->post('submit') == "addnew") {
                 $update_arr["teacher_id"] = $_SESSION['teacher_id'];
                 $update_arr["createtime"] = date("Y-m-d H:i:s");
-                $paresed_url=parse_url($this->input->post('url'));
-                if (check_remote_file_exists($paresed_url['scheme'].'://'.$paresed_url['host'].'/favicon.ico')){
-                    $update_arr["icon_uri"] = $paresed_url['scheme'].'://'.$paresed_url['host'].'/favicon.ico';
+                $paresed_url = parse_url($this->input->post('url'));
+                if (check_remote_file_exists($paresed_url['scheme'] . '://' . $paresed_url['host'] . '/favicon.ico')) {
+                    $update_arr["icon_uri"] = $paresed_url['scheme'] . '://' . $paresed_url['host'] . '/favicon.ico';
                 }
                 $this->all_model->general_insert("bm_bookmark", $update_arr);
             } elseif ($this->input->post('submit') == "update") {
@@ -174,7 +174,7 @@ class User extends User_Data
             } elseif ($this->input->post('submit') == "delete") {
                 $this->all_model->general_delete("bm_bookmark", array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
             }
-            redirect('user/manage_bookmark/#'.$this->input->post('id'));
+            redirect('user/manage_bookmark/#' . $this->input->post('id'));
         }
     }
 
@@ -305,82 +305,6 @@ class User extends User_Data
         $this->load->view('templates/header', $data);
         $this->load->view('teachers/my_documents', $data);
         $this->load->view('templates/footer');
-    }
-
-//上传一个文档（本地）
-    public function upload_document($grade = "-", $subject_id = "-", $category_id = "-")
-    {
-        $data = $this->general_data;
-        $data['title'] = "上传公共文档";
-        $data['document_categories'] = $this->all_model->general_load2('bm_document_categories', array("sort" => "DESC"));
-        $data['subjects'] = $this->all_model->general_list("bm_subjects", array("id!=" => "-1"), array("sort" => "desc"));
-        $this->form_validation->set_rules('userfile', '文档', 'required');
-
-        if ($this->input->post('submit') == "提交") {
-
-            $this->load->helper('path');
-            $path = "uploads/documents/" . date("Y/m/d") . "/";
-            //$path = "uploads/documents/" . find_in_arr($data['document_categories'], "name", $this->input->post('category'), "id") . "/";
-            if (!is_dir($path)) {
-                mkdir($path, 0755, true);
-            }
-            $config['upload_path'] = $path;
-            $config['allowed_types'] = 'pdf|xls|xlsx|doc|docx|ppt|pptx|zip|rar|txt|7z|7zip|jpg|png|gif|jpeg|bmp|webp|mp4|mp3';
-            $config['file_ext_tolower'] = true;
-            $config['overwrite'] = true;
-            $config['max_size'] = 20480;
-            $config['encrypt_name'] = true;
-
-            $this->load->library('upload', $config);
-
-            if (!$this->upload->do_upload('userfile')) {
-                $error = array('error' => $this->upload->display_errors());
-                $error = $error . "<br>请确认文件扩展名和文件真实类型一致，而不是自己修改的扩展名。";
-                $this->load->view('templates/error', $error);
-                $uploaded = $this->upload->data();
-                var_dump($uploaded['file_type']);
-                die;
-            } else {
-                $uploaded = $this->upload->data();
-                //var_dump($uploaded['file_type']);
-                //die;
-                //var_dump($uploaded['file_ext']);
-                if (thumb_img($uploaded['file_name'])) {
-                    $config_manip = array(
-                        'image_library' => 'gd2',
-                        'source_image' => $path . "{$uploaded['file_name']}",
-                        'new_image' => $path . "thumb_{$uploaded['file_name']}",
-                        'create_thumb' => true,
-                        'thumb_marker' => '',
-                        'maintain_ratio' => true,
-                        'width' => 140,
-                        'height' => 140
-                    );
-                    // Create thumbnail
-                    $this->load->library('image_lib');
-                    $this->image_lib->resize();
-                    $this->image_lib->clear();
-                    $this->image_lib->initialize($config_manip);
-                    if (!$this->image_lib->resize()) {
-                        return array('errors' => $this->image_lib->display_errors());
-                        $this->load->view('templates/error', $error);
-                    }
-                }
-                $category = $this->all_model->upload_document('bm_documents', $uploaded['orig_name'], $path, $uploaded['file_name'], $uploaded['file_ext']);
-                $category_id = $this->input->post('category_id');
-                $grade = $this->input->post('grade');
-                $subject_id = $this->input->post('subject_id');
-                redirect('user/my_documents/' . $grade . '/' . $subject_id . '/' . $category_id);
-            }
-        } else {
-            $data['category_id'] = $category_id;
-            $data['grade'] = $grade;
-            $data['subject_id'] = $subject_id;
-
-            $this->load->view('templates/header', $data);
-            $this->load->view('teachers/upload_document', $data);
-            $this->load->view('templates/footer');
-        }
     }
 
 
@@ -613,116 +537,6 @@ class User extends User_Data
     }
 
 
-
-//一般通用导出数据到excel文件
-//不能使用php7.3版本，会出错，只能用7.2版本
-    public function export_excel()
-    {
-        $this->form_validation->set_rules('filename', '文件名', 'required');
-        $this->form_validation->set_rules('data', '数据', 'required');
-        if ($this->form_validation->run() !== FALSE) {
-            $this->load->library("phpexcel");
-            $obj = new \PHPExcel();
-
-// 文件名和文件类型
-            $fileName = $this->input->post('filename');
-            $fileType = "xlsx";     //xls会出错
-
-            $data_json = $this->input->post('data');
-
-            $data = json_decode($data_json, true);
-
-
-            // 以下内容是excel文件的信息描述信息
-            $obj->getProperties()->setCreator(''); //设置创建者
-            $obj->getProperties()->setLastModifiedBy(''); //设置修改者
-            $obj->getProperties()->setTitle(''); //设置标题
-            $obj->getProperties()->setSubject(''); //设置主题
-            $obj->getProperties()->setDescription(''); //设置描述
-            $obj->getProperties()->setKeywords('');//设置关键词
-            $obj->getProperties()->setCategory('');//设置类型
-
-            // 设置当前sheet
-            $obj->setActiveSheetIndex(0);
-
-            // 设置当前sheet的名称
-            $obj->getActiveSheet()->setTitle('Sheet1');
-
-            // 列标
-            $list = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ');
-
-            //填充标题（如果设置了的话）
-            if ($data['title'] != null) {
-                $start_row = 2;
-                $obj->getActiveSheet()->mergeCells('A1:' . $list[count($data['header'])] . '1');
-                $obj->setActiveSheetIndex(0)->setCellValue('A1', $data['title']);   //注意这种方法是设置第一个表为活动表，然后设置单元格；而不是获取当前活动表然后再设置单元格。注意区别，两种方法都可以。
-                $styleArray = array(
-                    'font' => array(
-                        'bold' => false,
-                        'color' => array('rgb' => 'FF0000'),
-                        'size' => 9,
-                        'name' => 'Verdana'
-                    ));
-                $obj->getActiveSheet()->getStyle('A1')->applyFromArray($styleArray);     //利用数组设置单元格样式
-            } else {
-                $start_row = 1;
-            }
-            // 填充列名数据
-
-            for ($i = 0; $i < count($data['header']); $i++) {
-                $obj->getActiveSheet()
-                    ->setCellValue($list[$i] . $start_row, $data['header'][$i]);
-            }
-
-            // 填充第n(n>=2, n∈N*)行数据
-            $length = count($data['body']);
-            for ($i = 0; $i < count($data['body']); $i++) {
-                for ($j = 0; $j < count($data['body'][$i]); $j++) {
-                    $obj->getActiveSheet()->setCellValue($list[$j] . ($i + $start_row + 1), $data['body'][$i][$j], PHPExcel_Cell_DataType::TYPE_STRING);//将其设置为文本格式
-
-                    $obj->getActiveSheet()->getCell($list[$j] . ($i + $start_row + 1))->setDataType('inlineStr');//设置单元格为文本格式
-                    $obj->getActiveSheet()->getStyle($list[$j] . ($i + $start_row + 1))->getNumberFormat()->setFormatCode('0');
-                    $obj->getActiveSheet()->setCellValue($list[$j] . ($i + $start_row + 1), $data['body'][$i][$j]);
-                    //$obj->getActiveSheet()->setCellValue($list[$j] . ($i + 2), $data['body'][$i][$j],PHPExcel_Cell_DataType::TYPE_STRING);//将其设置为文本格式  //这种设置方式无效
-                }
-            }
-
-            // 设置加粗和左对齐
-            foreach ($list as $col) {
-                // 设置标题行加粗
-                $obj->getActiveSheet()->getStyle($col . $start_row)->getFont()->setBold(true);
-                // 设置内容行左对齐
-                for ($i = 1; $i <= $length + $start_row + 1; $i++) {
-                    $obj->getActiveSheet()->getStyle($col . $i)->getAlignment()->setHorizontal(\PHPExcel_Style_Alignment::HORIZONTAL_LEFT);
-                }
-            }
-
-            // 设置列宽
-            //$obj->getActiveSheet()->getColumnDimension('A')->setWidth(20);
-            //$obj->getActiveSheet()->getColumnDimension('B')->setWidth(20);
-            //$obj->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-
-            // 导出
-            ob_clean();
-            if ($fileType == 'xls') {
-                header('Content-Type: application/vnd.ms-excel');
-                header('Content-Disposition: attachment;filename="' . $fileName . '.xls');
-                header('Cache-Control: max-age=1');
-                $objWriter = new \PHPExcel_Writer_Excel5($obj);
-                $objWriter->save('php://output');
-                exit;
-            } elseif ($fileType == 'xlsx') {
-                //header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                header('content-type:application/octet-stream');
-                header('Content-Disposition: attachment;filename=' . $fileName . '.xlsx');
-                header('Cache-Control: max-age=1');
-                $objWriter = \PHPExcel_IOFactory::createWriter($obj, 'Excel2007');
-                $objWriter->save('php://output');
-                exit;
-            }
-        }
-    }
-
 //编辑教师
     public function edit_teacher($id)
     {
@@ -797,59 +611,16 @@ class User extends User_Data
                     $update_arr[$x_key] = $x_value;
                 }
             endforeach;
-            if ($this->all_model->general_get_amount('bm_user', array("id!="=>$_SESSION['teacher_id'],"name"=>$this->input->post('name')))>0){
+            if ($this->all_model->general_get_amount('bm_user', array("id!=" => $_SESSION['teacher_id'], "name" => $this->input->post('name'))) > 0) {
                 $_SESSION['err_msg'] = err_msg("已存在相同昵称！");
-            }
-            elseif($this->all_model->general_get_amount('bm_user', array("id!="=>$_SESSION['teacher_id'],"email"=>$this->input->post('email')))>0){
+            } elseif ($this->all_model->general_get_amount('bm_user', array("id!=" => $_SESSION['teacher_id'], "email" => $this->input->post('email'))) > 0) {
                 $_SESSION['err_msg'] = err_msg("已存在相同电子邮件！");
-            }
-            else{
+            } else {
                 $this->all_model->general_update("bm_user", $update_arr, array("id" => $_SESSION['teacher_id']));
             }
             redirect('user/self_edit_teacher');
         }
     }
-
-//新建教职工
-    public function create_teacher()
-    {
-        $data = $this->general_data;
-        require_authority(array("au_teacher_manage"), $data['authority']);
-        $data['title'] = '新增教职工';
-        $data['marriage'] = $this->all_model->general_load("xz_marriage", "sort", "desc");
-        $data['education'] = $this->all_model->general_load("xz_education", "sort", "desc");
-        $data['parties'] = $this->all_model->general_load("xz_parties", "sort", "desc");
-        $data['stafftype'] = $this->all_model->general_load("xz_stafftype", "sort", "desc");
-        $data['ethnicity'] = $this->all_model->general_load("xz_ethnicity", "sort", "desc");
-        $data['position'] = $this->all_model->general_load("xz_position", "sort", "desc");
-        $data['departments'] = $this->all_model->general_list("xz_departments", array("parent_id" => -1), array("sort" => "desc"));
-        for ($i = 0; $i < count($data['departments']); $i++) {
-            $data['departments'][$i]["subdepartments"] = $this->all_model->general_list("xz_departments", array("parent_id" => $data['departments'][$i]['id']), array("sort" => "desc"));
-        }
-        $data['departments'][] = array("id" => "0", "name" => "未分类");
-
-        $this->form_validation->set_rules('name', '姓名', 'required');
-
-        if ($this->form_validation->run() === FALSE) {
-            $this->load->view('templates/header', $data);
-            $this->load->view('teachers/create_teacher', $data);
-            $this->load->view('templates/footer');
-        } else {
-            $post = $this->input->post();
-            $update_arr = array();
-            $except_arr = array("submit", "identity_number");
-            foreach ($post as $x_key => $x_value):
-                if (!in_array($x_key, $except_arr)) {
-                    $update_arr[$x_key] = $x_value;
-                }
-            endforeach;
-            $update_arr["identity_number"] = str_replace("x", "X", $this->input->post('identity_number'));
-            $update_arr["createtime"] = date("Y-m-d H:i:s");
-            $this->all_model->general_insert("bm_user", $update_arr);
-            redirect('user/list_custom_teachers/0');
-        }
-    }
-
 
 //修改密码
     public function pwd($result = NULL)
@@ -873,16 +644,17 @@ class User extends User_Data
             }
         }
     }
+
 //获取网页标题
     public function url_title()
     {
         $data = $this->general_data;
-        $url=$this->input->post('url');
+        $url = $this->input->post('url');
         $this->load->library('curl');
-        $html=Curl::get($url);
+        $html = Curl::get($url);
         $reTag = "/<title>([\s\S]*?)<\/title>/i";
         preg_match($reTag, $html, $match);
-        $title=$match[1];
+        $title = $match[1];
         echo $title;
         //$arr = Curl::post('http://localhost:9090/test.php', array('a'=>1,'b'=>2));
     }
@@ -914,43 +686,39 @@ class User extends User_Data
             endforeach;
             $update_arr["teacher_id"] = $_SESSION['teacher_id'];
             if ($this->input->post('submit') == "add_folder") {   //添加一级目录
-                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id"=>$_SESSION['teacher_id'],"folder_name"=>$this->input->post('folder_name')))>0){
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $_SESSION['teacher_id'], "folder_name" => $this->input->post('folder_name'))) > 0) {
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
-                }
-                else{
+                } else {
                     $update_arr["father_id"] = -1;
                     $this->all_model->general_insert('bm_folder', $update_arr);
                 }
             } elseif ($this->input->post('submit') == "add_subfolder") {     //添加二级目录
-                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$this->input->post('father_id'),"folder_name"=>$this->input->post('folder_name')))>0){
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $this->input->post('father_id'), "folder_name" => $this->input->post('folder_name'))) > 0) {
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
-                }
-                else{
+                } else {
                     $this->all_model->general_insert('bm_folder', $update_arr);
                 }
             } elseif ($this->input->post('submit') == "delete_subfolder") {     //删除二级目录
-                $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'),"teacher_id"=>$_SESSION['teacher_id']));
-                $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'),"teacher_id"=>$_SESSION['teacher_id']));
+                $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+                $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
             } elseif ($this->input->post('submit') == "delete_folder") {       //删除一级目录
                 //先要遍历子目录的id再删
-                $sub_folder=$this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $this->input->post('id')));
-                foreach($sub_folder as $item){
-                    $this->all_model->general_delete('bm_bookmark', array("folder_id" => $item['id'],"teacher_id"=>$_SESSION['teacher_id']));
-                    $this->all_model->general_delete('bm_folder', array("id" => $item['id'],"teacher_id"=>$_SESSION['teacher_id']));
+                $sub_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $this->input->post('id')));
+                foreach ($sub_folder as $item) {
+                    $this->all_model->general_delete('bm_bookmark', array("folder_id" => $item['id'], "teacher_id" => $_SESSION['teacher_id']));
+                    $this->all_model->general_delete('bm_folder', array("id" => $item['id'], "teacher_id" => $_SESSION['teacher_id']));
                 }
-                $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'),"teacher_id"=>$_SESSION['teacher_id']));
+                $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
             } elseif ($this->input->post('submit') == "update_subfolder") {              //修改二级目录
-                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$this->input->post('father_id'),"folder_name"=>$this->input->post('folder_name')))>0){
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $this->input->post('father_id'), "folder_name" => $this->input->post('folder_name'))) > 0) {
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
-                }
-                else {
+                } else {
                     $this->all_model->general_update("bm_folder", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
                 }
             } else {     //修改一级目录
-                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id"=>$_SESSION['teacher_id'],"father_id"=>-1,"folder_name"=>$this->input->post('folder_name')))>0){
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1, "folder_name" => $this->input->post('folder_name'))) > 0) {
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
-                }
-                else {
+                } else {
                     $this->all_model->general_update("bm_folder", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
                 }
             }
@@ -961,12 +729,11 @@ class User extends User_Data
 //导入浏览器收藏夹
     public function import()
     {
-        $this->load->library("phpexcel");
-
+        $data = $this->general_data;
         $data['title'] = '导入浏览器收藏夹';
         $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1));
         $this->form_validation->set_rules('json_string', '文件', 'required');
-        $data['output']=array();
+        $data['output'] = array();
         if ($_POST["submit"] != "submit") {
             $this->load->view('templates/header', $data);
             $this->load->view('teachers/import', $data);
@@ -975,104 +742,99 @@ class User extends User_Data
             $arr = json_decode($this->input->post('json_string'), 1);
             //var_dump($arr);
             $root_name = array_key_first($arr);
-            $data['output'][]="根名：" . $root_name;
+            $data['output'][] = "根名：" . $root_name;
             for ($i = 0; $i < count($arr[$root_name]); $i++) {
                 if (is_bookmark_folder($arr[$root_name][$i])) {
                     $root_name1 = array_key_first($arr[$root_name][$i]);
                     //echo $root_name1 . "<br>";
-                    $tmp1=$this->all_model->general_select("bm_folder", "id", array("folder_name"=>$root_name1,"teacher_id"=>$_SESSION['teacher_id']));
-                    if ($tmp1==null){
-                        $folder_id1=$this->all_model->general_insert('bm_folder', array("folder_name"=>$root_name1,"teacher_id"=>$_SESSION['teacher_id']));
-                        $data['output'][]="目录[".$root_name1."]插入成功";
-                    }
-                    else{
-                        $folder_id1=$tmp1[0]['id'];
-                        $data['output'][]="目录[".$root_name1."]已存在";
+                    $tmp1 = $this->all_model->general_select("bm_folder", "id", array("folder_name" => $root_name1, "teacher_id" => $_SESSION['teacher_id']));
+                    if ($tmp1 == null) {
+                        $folder_id1 = $this->all_model->general_insert('bm_folder', array("folder_name" => $root_name1, "teacher_id" => $_SESSION['teacher_id']));
+                        $data['output'][] = "目录[" . $root_name1 . "]插入成功";
+                    } else {
+                        $folder_id1 = $tmp1[0]['id'];
+                        $data['output'][] = "目录[" . $root_name1 . "]已存在";
                     }
                     for ($j = 0; $j < count($arr[$root_name][$i][$root_name1]); $j++) {
                         if (is_bookmark_folder($arr[$root_name][$i][$root_name1][$j])) {
                             $root_name2 = array_key_first($arr[$root_name][$i][$root_name1][$j]);
                             //echo $root_name2 . "<br>";
-                            $tmp2=$this->all_model->general_select("bm_folder", "id", array("folder_name"=>$root_name2,"teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$folder_id1));
-                            if ($tmp2==null){
-                                $folder_id2=$this->all_model->general_insert('bm_folder', array("folder_name"=>$root_name2,"teacher_id"=>$_SESSION['teacher_id'],"father_id"=>$folder_id1));
-                                $data['output'][]="目录[".$root_name2."]插入成功";
-                            }
-                            else{
-                                $folder_id2=$tmp2[0]['id'];
-                                $data['output'][]="目录[".$root_name2."]已存在";
+                            $tmp2 = $this->all_model->general_select("bm_folder", "id", array("folder_name" => $root_name2, "teacher_id" => $_SESSION['teacher_id'], "father_id" => $folder_id1));
+                            if ($tmp2 == null) {
+                                $folder_id2 = $this->all_model->general_insert('bm_folder', array("folder_name" => $root_name2, "teacher_id" => $_SESSION['teacher_id'], "father_id" => $folder_id1));
+                                $data['output'][] = "目录[" . $root_name2 . "]插入成功";
+                            } else {
+                                $folder_id2 = $tmp2[0]['id'];
+                                $data['output'][] = "目录[" . $root_name2 . "]已存在";
                             }
                             for ($k = 0; $k < count($arr[$root_name][$i][$root_name1][$j][$root_name2]); $k++) {
                                 if (is_bookmark_folder($arr[$root_name][$i][$root_name1][$j][$root_name2][$k])) {
                                     //以下是三级目录，都放在根目录下，超过三级的放弃导入
-                                    $root_name3=array_key_first($arr[$root_name][$i][$root_name1][$j][$root_name2][$k]);
+                                    $root_name3 = array_key_first($arr[$root_name][$i][$root_name1][$j][$root_name2][$k]);
                                     for ($l = 0; $l < count($arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3]); $l++) {
-                                            if ($this->all_model->general_get_amount("bm_bookmark", array("url"=>$arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
-                                                $insert_arr = array();
-                                                $insert_arr['teacher_id']=$_SESSION['teacher_id'];
-                                                $insert_arr["createtime"] = date("Y-m-d H:i:s");
-                                                $insert_arr["title"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"] ;
-                                                $insert_arr["url"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"];
-                                                $insert_arr["icon"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["icon"];
-                                                $insert_arr["icon_uri"] =$arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["icon"];
-                                                $insert_arr["folder_id"] =0;
-                                                $this->all_model->general_insert('bm_bookmark', $insert_arr);
-                                                $data['output'][]= $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"] ."导入成功";
-                                            }
-                                            else{
-                                                $data['output'][]= $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"] ."跳过";
-                                            }
+                                        echo "xxxxxxxxxxxxxxxxxxx".$arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"];
+                                        if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"], "teacher_id" => $_SESSION['teacher_id'])) == 0) {
+                                            $insert_arr = array();
+                                            $insert_arr['teacher_id'] = $_SESSION['teacher_id'];
+                                            $insert_arr["createtime"] = date("Y-m-d H:i:s");
+                                            $insert_arr["title"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"];
+                                            $insert_arr["url"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"];
+                                            $insert_arr["icon"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["icon"];
+                                            $insert_arr["icon_uri"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["icon"];
+                                            $insert_arr["folder_id"] = 0;
+                                            //$this->all_model->general_insert('bm_bookmark', $insert_arr);
+                                            $data['output'][] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"] . "导入成功";
+                                        } else {
+                                            $data['output'][] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"] . "跳过";
+                                        }
                                     }
                                 } else {
-                                    if ($this->all_model->general_get_amount("bm_bookmark", array("url"=>$arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
+                                    if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["href"], "teacher_id" => $_SESSION['teacher_id'])) == 0) {
                                         $insert_arr = array();
-                                        $insert_arr['teacher_id']=$_SESSION['teacher_id'];
+                                        $insert_arr['teacher_id'] = $_SESSION['teacher_id'];
                                         $insert_arr["createtime"] = date("Y-m-d H:i:s");
-                                        $insert_arr["title"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["name"] ;
+                                        $insert_arr["title"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["name"];
                                         $insert_arr["url"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["href"];
                                         $insert_arr["icon"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["icon"];
-                                        $insert_arr["icon_uri"] =$arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["icon"];
-                                        $insert_arr["folder_id"] =$folder_id2;
+                                        $insert_arr["icon_uri"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["icon"];
+                                        $insert_arr["folder_id"] = $folder_id2;
                                         $this->all_model->general_insert('bm_bookmark', $insert_arr);
-                                        $data['output'][]= $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["name"] ."导入成功";
-                                    }
-                                    else{
-                                        $data['output'][]= $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["name"] ."跳过";
+                                        $data['output'][] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["name"] . "导入成功";
+                                    } else {
+                                        $data['output'][] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["name"] . "跳过";
                                     }
                                 }
                             }
                         } else {
-                            if ($this->all_model->general_get_amount("bm_bookmark", array("url"=>$arr[$root_name][$i][$root_name1][$j]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
+                            if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i][$root_name1][$j]["href"], "teacher_id" => $_SESSION['teacher_id'])) == 0) {
                                 $insert_arr = array();
-                                $insert_arr['teacher_id']=$_SESSION['teacher_id'];
+                                $insert_arr['teacher_id'] = $_SESSION['teacher_id'];
                                 $insert_arr["createtime"] = date("Y-m-d H:i:s");
-                                $insert_arr["title"] = $arr[$root_name][$i][$root_name1][$j]["name"] ;
-                                $insert_arr["url"] = $arr[$root_name][$i][$root_name1][$j]["href"] ;
+                                $insert_arr["title"] = $arr[$root_name][$i][$root_name1][$j]["name"];
+                                $insert_arr["url"] = $arr[$root_name][$i][$root_name1][$j]["href"];
                                 $insert_arr["icon"] = $arr[$root_name][$i][$root_name1][$j]["icon"];
-                                $insert_arr["icon_uri"] =$arr[$root_name][$i][$root_name1][$j]["icon"];
-                                $insert_arr["folder_id"] =$folder_id1;
+                                $insert_arr["icon_uri"] = $arr[$root_name][$i][$root_name1][$j]["icon"];
+                                $insert_arr["folder_id"] = $folder_id1;
                                 $this->all_model->general_insert('bm_bookmark', $insert_arr);
-                                $data['output'][]= $arr[$root_name][$i][$root_name1][$j]["name"] ."导入成功";
-                            }
-                            else{
-                                $data['output'][]= $arr[$root_name][$i][$root_name1][$j]["name"] ."跳过";
+                                $data['output'][] = $arr[$root_name][$i][$root_name1][$j]["name"] . "导入成功";
+                            } else {
+                                $data['output'][] = $arr[$root_name][$i][$root_name1][$j]["name"] . "跳过";
                             }
                         }
                     }
                 } else {
-                    if ($this->all_model->general_get_amount("bm_bookmark", array("url"=>$arr[$root_name][$i]["href"],"teacher_id"=>$_SESSION['teacher_id']))==0){
+                    if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i]["href"], "teacher_id" => $_SESSION['teacher_id'])) == 0) {
                         $insert_arr = array();
-                        $insert_arr['teacher_id']=$_SESSION['teacher_id'];
+                        $insert_arr['teacher_id'] = $_SESSION['teacher_id'];
                         $insert_arr["createtime"] = date("Y-m-d H:i:s");
-                        $insert_arr["title"] = $arr[$root_name][$i]["name"] ;
-                        $insert_arr["url"] = $arr[$root_name][$i]["href"] ;
-                        $insert_arr["icon"] = $arr[$root_name][$i]["icon"] ;
-                        $insert_arr["icon_uri"] = $arr[$root_name][$i]["icon_uri"] ;
+                        $insert_arr["title"] = $arr[$root_name][$i]["name"];
+                        $insert_arr["url"] = $arr[$root_name][$i]["href"];
+                        $insert_arr["icon"] = $arr[$root_name][$i]["icon"];
+                        $insert_arr["icon_uri"] = $arr[$root_name][$i]["icon_uri"];
                         $this->all_model->general_insert('bm_bookmark', $insert_arr);
-                        $data['output'][]= $arr[$root_name][$i]["name"]."导入成功";
-                    }
-                    else{
-                        $data['output'][]= $arr[$root_name][$i]["name"]."跳过";
+                        $data['output'][] = $arr[$root_name][$i]["name"] . "导入成功";
+                    } else {
+                        $data['output'][] = $arr[$root_name][$i]["name"] . "跳过";
                     }
                 }
             }
@@ -1080,6 +842,55 @@ class User extends User_Data
             $this->load->view('teachers/import', $data);
             $this->load->view('templates/footer');
         }
+    }
+
+
+    //导出html
+    function export()
+    {
+        $data = $this->general_data;
+        $out = '<DL><p>';
+        $out = $out."\n";
+        $root_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => 0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+        foreach ($root_bookmark as $item) {
+            $out = $out . '<DT><A HREF="' . $item['url'] . '" ADD_DATE="' . $item['timestamp'] . '" ICON="' . $item['icon'] . '" ICON_URI="' . $item['icon_uri'] . '">' . $item['title'] . '</A></DT>';
+            $out = $out."\n";
+        }
+        $lv1_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        foreach ($lv1_folder as $lv1_folder_item) {
+            $out = $out . '<DT><H3 ADD_DATE="' . $lv1_folder_item['timestamp'] . '">' . $lv1_folder_item['folder_name'] . '</H3></DT>';
+            $out = $out."\n";
+            $out = $out . '<DL><p>';
+            $out = $out."\n";
+            $lv2_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $lv1_folder_item['id']), array("convert(folder_name using gbk)" => "asc"));
+            foreach ($lv2_folder as $lv2_folder_item) {
+                $out = $out . '<DT><H3 ADD_DATE="' . $lv2_folder_item['timestamp'] . '">' . $lv2_folder_item['folder_name'] . '</H3></DT>';
+                $out = $out."\n";
+                $lv2_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => $lv2_folder_item['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+                if ($lv2_bookmark != null) {
+                    $out = $out . '<DL><p>';
+                    $out = $out."\n";
+                    foreach ($lv2_bookmark as $lv2_bookmark_item) {
+                        $out = $out . '<DT><A HREF="' . $lv2_bookmark_item['url'] . '" ADD_DATE="' . $lv2_bookmark_item['timestamp'] . '" ICON="' . $lv2_bookmark_item['icon'] . '" ICON_URI="' . $lv2_bookmark_item['icon_uri'] . '">' . $lv2_bookmark_item['title'] . '</A></DT>';
+                        $out = $out."\n";
+                    }
+                    $out = $out . '</DL>';
+                    $out = $out."\n";
+                }
+            }
+            $lv1_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => $lv1_folder_item['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+            foreach ($lv1_bookmark as $lv1_bookmark_item) {
+                $out = $out . '<DT><A HREF="' . $lv1_bookmark_item['url'] . '" ADD_DATE="' . $lv1_bookmark_item['timestamp'] . '" ICON="' . $lv1_bookmark_item['icon'] . '" ICON_URI="' . $lv1_bookmark_item['icon_uri'] . '">' . $lv1_bookmark_item['title'] . '</A></DT>';
+                $out = $out."\n";
+            }
+            $out = $out . '</DL>';
+            $out = $out."\n";
+        }
+        $out = $out . '</DL>';
+        $out = $out."\n";
+
+        //$out='<DL><p><DT><H3 ADD_DATE="1638173445" LAST_MODIFIED="1648083283" PERSONAL_TOOLBAR_FOLDER="true">书签工具栏</H3></DT>'.$out.'</DL>';
+        echo $out;
     }
     ////////////////////
 }

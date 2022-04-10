@@ -1,9 +1,11 @@
 <div class="container">
     <h2><?php echo $title; ?>
         <span class="pull-right small">
+            <a href="<?php echo site_url('user/manage_folder/'); ?>">目录</a>
+            |
             <a href="<?php echo site_url('user/import/'); ?>">导入</a>
             |
-            <a href="<?php echo site_url('user/manage_folder/'); ?>">目录</a>
+            <a href="<?php echo site_url('user/export/'); ?>" target="_blank">导出</a>
         </span>
     </h2>
     <table class="table table-bordered table-striped">
