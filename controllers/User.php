@@ -772,20 +772,23 @@ class User extends User_Data
                                     //以下是三级目录，都放在根目录下，超过三级的放弃导入
                                     $root_name3 = array_key_first($arr[$root_name][$i][$root_name1][$j][$root_name2][$k]);
                                     for ($l = 0; $l < count($arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3]); $l++) {
-                                        echo "xxxxxxxxxxxxxxxxxxx".$arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"];
-                                        if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"], "teacher_id" => $_SESSION['teacher_id'])) == 0) {
-                                            $insert_arr = array();
-                                            $insert_arr['teacher_id'] = $_SESSION['teacher_id'];
-                                            $insert_arr["createtime"] = date("Y-m-d H:i:s");
-                                            $insert_arr["title"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"];
-                                            $insert_arr["url"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"];
-                                            $insert_arr["icon"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["icon"];
-                                            $insert_arr["icon_uri"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["icon"];
-                                            $insert_arr["folder_id"] = 0;
-                                            //$this->all_model->general_insert('bm_bookmark', $insert_arr);
-                                            $data['output'][] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"] . "导入成功";
-                                        } else {
-                                            $data['output'][] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"] . "跳过";
+                                        if (!is_bookmark_folder($arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l])) {
+                                            if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"], "teacher_id" => $_SESSION['teacher_id'])) == 0) {
+                                                //echo "aaaaa" . $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"] . "<br>";
+                                                $insert_arr = array();
+                                                $insert_arr['teacher_id'] = $_SESSION['teacher_id'];
+                                                $insert_arr["createtime"] = date("Y-m-d H:i:s");
+                                                $insert_arr["title"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"];
+                                                $insert_arr["url"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"];
+                                                $insert_arr["icon"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["icon"];
+                                                $insert_arr["icon_uri"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["icon"];
+                                                $insert_arr["folder_id"] = 0;
+                                                $this->all_model->general_insert('bm_bookmark', $insert_arr);
+                                                $data['output'][] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"] . "导入成功";
+                                            } else {
+                                                //echo "bbbbb" . $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"] . "<br>";
+                                                $data['output'][] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"] . "跳过";
+                                            }
                                         }
                                     }
                                 } else {
@@ -889,7 +892,14 @@ class User extends User_Data
         $out = $out . '</DL>';
         $out = $out."\n";
 
-        //$out='<DL><p><DT><H3 ADD_DATE="1638173445" LAST_MODIFIED="1648083283" PERSONAL_TOOLBAR_FOLDER="true">书签工具栏</H3></DT>'.$out.'</DL>';
+        $out='<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"><TITLE>收藏夹</TITLE><H1>收藏夹</H1>'.$out;
+        $out_filename="gm_ws_bookmarks_".date("Y_m_d").".html";
+        header('Accept-Ranges: bytes');
+        //header('Accept-Length: ' . filesize($filename));
+        header('Content-Transfer-Encoding: binary');
+        header('Content-type: application/octet-stream');
+        header('Content-Disposition: attachment; filename=' . $out_filename);
+        header('Content-Type: application/octet-stream; name=' . $out_filename);
         echo $out;
     }
     ////////////////////
