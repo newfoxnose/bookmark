@@ -698,16 +698,22 @@ class User extends User_Data
                 } else {
                     $this->all_model->general_insert('bm_folder', $update_arr);
                 }
+            }
+            elseif ($this->input->post('submit') == "empty_root") {     //清空根目录
+                $this->all_model->general_delete('bm_bookmark', array("folder_id" => 0, "teacher_id" => $_SESSION['teacher_id']));
+            } elseif ($this->input->post('submit') == "empty_folder") {     //清空一二级目录
+                $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
             } elseif ($this->input->post('submit') == "delete_subfolder") {     //删除二级目录
                 $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
                 $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
-            } elseif ($this->input->post('submit') == "delete_folder") {       //删除一级目录
+            }  elseif ($this->input->post('submit') == "delete_folder") {       //删除一级目录
                 //先要遍历子目录的id再删
                 $sub_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $this->input->post('id')));
                 foreach ($sub_folder as $item) {
                     $this->all_model->general_delete('bm_bookmark', array("folder_id" => $item['id'], "teacher_id" => $_SESSION['teacher_id']));
                     $this->all_model->general_delete('bm_folder', array("id" => $item['id'], "teacher_id" => $_SESSION['teacher_id']));
                 }
+                $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
                 $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
             } elseif ($this->input->post('submit') == "update_subfolder") {              //修改二级目录
                 if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $this->input->post('father_id'), "folder_name" => $this->input->post('folder_name'))) > 0) {
@@ -853,47 +859,47 @@ class User extends User_Data
     {
         $data = $this->general_data;
         $out = '<DL><p>';
-        $out = $out."\n";
+        $out = $out . "\n";
         $root_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => 0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
         foreach ($root_bookmark as $item) {
             $out = $out . '<DT><A HREF="' . $item['url'] . '" ADD_DATE="' . $item['timestamp'] . '" ICON="' . $item['icon'] . '" ICON_URI="' . $item['icon_uri'] . '">' . $item['title'] . '</A></DT>';
-            $out = $out."\n";
+            $out = $out . "\n";
         }
         $lv1_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
         foreach ($lv1_folder as $lv1_folder_item) {
             $out = $out . '<DT><H3 ADD_DATE="' . $lv1_folder_item['timestamp'] . '">' . $lv1_folder_item['folder_name'] . '</H3></DT>';
-            $out = $out."\n";
+            $out = $out . "\n";
             $out = $out . '<DL><p>';
-            $out = $out."\n";
+            $out = $out . "\n";
             $lv2_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $lv1_folder_item['id']), array("convert(folder_name using gbk)" => "asc"));
             foreach ($lv2_folder as $lv2_folder_item) {
                 $out = $out . '<DT><H3 ADD_DATE="' . $lv2_folder_item['timestamp'] . '">' . $lv2_folder_item['folder_name'] . '</H3></DT>';
-                $out = $out."\n";
+                $out = $out . "\n";
                 $lv2_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => $lv2_folder_item['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
                 if ($lv2_bookmark != null) {
                     $out = $out . '<DL><p>';
-                    $out = $out."\n";
+                    $out = $out . "\n";
                     foreach ($lv2_bookmark as $lv2_bookmark_item) {
                         $out = $out . '<DT><A HREF="' . $lv2_bookmark_item['url'] . '" ADD_DATE="' . $lv2_bookmark_item['timestamp'] . '" ICON="' . $lv2_bookmark_item['icon'] . '" ICON_URI="' . $lv2_bookmark_item['icon_uri'] . '">' . $lv2_bookmark_item['title'] . '</A></DT>';
-                        $out = $out."\n";
+                        $out = $out . "\n";
                     }
                     $out = $out . '</DL>';
-                    $out = $out."\n";
+                    $out = $out . "\n";
                 }
             }
             $lv1_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => $lv1_folder_item['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
             foreach ($lv1_bookmark as $lv1_bookmark_item) {
                 $out = $out . '<DT><A HREF="' . $lv1_bookmark_item['url'] . '" ADD_DATE="' . $lv1_bookmark_item['timestamp'] . '" ICON="' . $lv1_bookmark_item['icon'] . '" ICON_URI="' . $lv1_bookmark_item['icon_uri'] . '">' . $lv1_bookmark_item['title'] . '</A></DT>';
-                $out = $out."\n";
+                $out = $out . "\n";
             }
             $out = $out . '</DL>';
-            $out = $out."\n";
+            $out = $out . "\n";
         }
         $out = $out . '</DL>';
-        $out = $out."\n";
+        $out = $out . "\n";
 
-        $out='<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"><TITLE>收藏夹</TITLE><H1>收藏夹</H1>'.$out;
-        $out_filename="gm_ws_bookmarks_".date("Y_m_d").".html";
+        $out = '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"><TITLE>收藏夹</TITLE><H1>收藏夹</H1>' . $out;
+        $out_filename = "gm_ws_bookmarks_" . date("Y_m_d") . ".html";
         header('Accept-Ranges: bytes');
         //header('Accept-Length: ' . filesize($filename));
         header('Content-Transfer-Encoding: binary');

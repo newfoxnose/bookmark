@@ -11,30 +11,44 @@
         </tr>
         <?php echo form_open('user/manage_folder/', array('class' => 'form-horizontal', 'role' => 'form')); ?>
         <tr>
+            <td colspan="2">根目录</td>
+            <td></td>
+            <td>
+            </td>
+            <td><button type="submit" name="submit" value="empty_root" class="btn btn-success">清空</button></td>
+        </tr>
+        </form>
+        <?php echo form_open('user/manage_folder/', array('class' => 'form-horizontal', 'role' => 'form')); ?>
+        <tr>
             <td colspan="2">添加一级目录</td>
             <td><input type="text" name="folder_name" class="form-control"></td>
-            <td>
+            <td>根目录
             </td>
             <td><button type="submit" name="submit" value="add_folder" class="btn btn-success">提交</button></td>
         </tr>
         </form>
-        <?php echo form_open('user/manage_folder/', array('class' => 'form-horizontal', 'role' => 'form')); ?>
-
-        <tr>
-            <td colspan="2">添加二级目录</td>
-            <td><input type="text" name="folder_name" class="form-control"></td>
-            <td>
-                <select class="form-control" name="father_id">
-                    <?php
-                    foreach ($select_folder as $select_folder_item): ?>
-                        <option value="<?php echo $select_folder_item['id']; ?>"><?php echo $select_folder_item['folder_name']; ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </td>
-            <td><button type="submit" name="submit" value="add_subfolder" class="btn btn-success">提交</button></td>
-        </tr>
-        </form>
-        <?php foreach ($folder as $item): ?>
+        <?php
+        if ($select_folder!=null) {
+            echo form_open('user/manage_folder/', array('class' => 'form-horizontal', 'role' => 'form')); ?>
+            <tr>
+                <td colspan="2">添加二级目录</td>
+                <td><input type="text" name="folder_name" class="form-control"></td>
+                <td>
+                    <select class="form-control" name="father_id">
+                        <?php
+                        foreach ($select_folder as $select_folder_item): ?>
+                            <option value="<?php echo $select_folder_item['id']; ?>"><?php echo $select_folder_item['folder_name']; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+                <td>
+                    <button type="submit" name="submit" value="add_subfolder" class="btn btn-success">提交</button>
+                </td>
+            </tr>
+            </form>
+            <?php
+        }
+        foreach ($folder as $item): ?>
             <?php echo form_open('user/manage_folder/', array('class' => 'form-horizontal', 'role' => 'form')); ?>
             <tr>
                 <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
@@ -45,6 +59,7 @@
                 </td>
                 <td></td>
                 <td>
+                    <button type="submit" name="submit" value="empty_folder" class="btn btn-success">清空</button>
                     <button type="submit" name="submit" value="submit" class="btn btn-success">修改</button>
                     <button type="submit" name="submit" value="delete_folder" class="btn btn-success" onclick="javascript:return del();">删除</button>
                 </td>
@@ -74,7 +89,7 @@
                     </select>
                 </td>
                 <td>
-                    <a href="<?php echo site_url('user/warehouse_goods/' . $sub_item['id']); ?>">本类物品</a>
+                    <button type="submit" name="submit" value="empty_folder" class="btn btn-success">清空</button>
                     <button type="submit" name="submit" value="update_subfolder" class="btn btn-success">修改</button>
                     <button type="submit" name="submit" value="delete_subfolder" class="btn btn-success" onclick="javascript:return del();">删除</button>
                 </td>
