@@ -596,33 +596,6 @@
             <input type="text" name="remark" class="form-control" value="<?php echo $teacher['remark'] ?>">
         </div>
     </div>
-    <hr>
-    <div class="form-group">
-        <label for="employed" class="col-sm-2 control-label">人员状态</label>
-        <div class="col-sm-10">
-            <label class="radio-inline">
-                <input type="radio" name="employed" value="0" <?php
-                if ($teacher['employed'] == 0) {
-                    echo " checked";
-                }
-                ?>>在职
-            </label>
-            <label class="radio-inline">
-                <input type="radio" name="employed" value="1" <?php
-                if ($teacher['employed'] == 1) {
-                    echo " checked";
-                }
-                ?>>离职
-            </label>
-            <label class="radio-inline">
-                <input type="radio" name="employed" value="2" <?php
-                if ($teacher['employed'] == 2) {
-                    echo " checked";
-                }
-                ?>>应聘
-            </label>
-        </div>
-    </div>
     <div class="form-group">
         <label for="entrydate" class="col-sm-2 control-label">入职日期</label>
         <div class="col-sm-10">

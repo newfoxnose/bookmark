@@ -151,7 +151,7 @@ class Admin extends Admin_Data
             echo name_from_grade($grade);
             $data['title'] = $pre_fix . "学生列表";
 
-            $data['teachers'] = $this->all_model->general_select("bm_user", "id,name", null, array("employed" => array(0, 1)), array("convert(name using gbk)" => "asc"));
+            $data['teachers'] = $this->all_model->general_select("bm_user", "id,name", null, null, array("convert(name using gbk)" => "asc"));
             array_push($data['teachers'], array("id" => "0", "name" => "招生办"));
             $data['counties'] = $this->all_model->general_load("xz_counties", "sort", "desc");
             $data['occupations'] = $this->all_model->general_load("xz_occupations", "sort", "asc");

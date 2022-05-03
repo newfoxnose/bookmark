@@ -14,6 +14,7 @@ class MY_Controller extends CI_Controller
         $this->load->helper('form');
         $this->load->library('form_validation');
         $this->load->library('session');
+        $this->load->helper('cookie');
         $this->load->helper('mine');
         $this->load->helper('directory');
         if (file_exists(APPPATH."views/in_maintenance.php")) {
@@ -61,10 +62,15 @@ class User_Data extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-        if ($_SESSION['login'] != "yes") {
+
+        if (decode(get_cookie('login')) != "yes") {
             redirect('index/login/');
         }
-        $data['teacher_item'] = $this->all_model->general_get("bm_user",array("id"=>$_SESSION['teacher_id']));
+        else{
+            $data['cookie_teacher_id']=decode(get_cookie('teacher_id'));
+            $data['cookie_level']=decode(get_cookie('level'));
+        }
+        $data['teacher_item'] = $this->all_model->general_get("bm_user",array("id"=>$data['cookie_teacher_id']));
         if (empty($data['teacher_item'])) {
             show_404();
         }

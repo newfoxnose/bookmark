@@ -16,10 +16,10 @@ class User extends User_Data
         $month = isset($month) ? $month : date("m");
 
         $data = $this->general_data;
-        $data['teacher'] = $this->all_model->general_get("bm_user", array("id" => $_SESSION['teacher_id']));
+        $data['teacher'] = $this->all_model->general_get("bm_user", array("id" => $data['cookie_teacher_id']));
         $data['title'] = '行事历';
 
-        $data['personal_events'] = $this->all_model->general_list("bm_events", array("teacher_id" => $_SESSION['teacher_id'], "date_format(date,'%Y-%m')" => date("Y-m", strtotime($year . "-" . $month))));
+        $data['personal_events'] = $this->all_model->general_list("bm_events", array("teacher_id" => $data['cookie_teacher_id'], "date_format(date,'%Y-%m')" => date("Y-m", strtotime($year . "-" . $month))));
 
         $data['name'] = $data['teacher_item']['name'];
 
@@ -36,7 +36,7 @@ class User extends User_Data
                     $update_arr[$x_key] = $x_value;
                 }
             endforeach;
-            $this->all_model->general_update("bm_user", $update_arr, array("id" => $_SESSION['teacher_id']));
+            $this->all_model->general_update("bm_user", $update_arr, array("id" => $data['cookie_teacher_id']));
             redirect('user/home/');
         }
 
@@ -67,7 +67,7 @@ class User extends User_Data
             $update_arr = array();
             $update_arr['date'] = $this->input->post('date');
             $update_arr['content'] = $this->input->post('content');
-            $update_arr['teacher_id'] = $_SESSION['teacher_id'];
+            $update_arr['teacher_id'] = $data['cookie_teacher_id'];
             $this->all_model->general_insert("bm_events", $update_arr);
             redirect('user/home/' . date("Y", strtotime($update_arr['date'])) . '/' . date("m", strtotime($update_arr['date'])));
         }
@@ -90,7 +90,7 @@ class User extends User_Data
         $update_arr = array(
             'rt_note' => $this->input->post('content')
         );
-        $this->all_model->general_update("bm_user", $update_arr, array("id" => $_SESSION['teacher_id']));
+        $this->all_model->general_update("bm_user", $update_arr, array("id" => $data['cookie_teacher_id']));
         echo "saved";
     }
 
@@ -99,36 +99,57 @@ class User extends User_Data
     public function home()
     {
         $data = $this->general_data;
+echo $data['cookie_level'];
+
         $data['title'] = '我的收藏夹';
-        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+
+        if ($data['cookie_level']!="all"){
+            $data['folder'] = delByValue($data['folder'],'folder_name','个人');
+        }
+        if ($data['cookie_level']=="work"){
+            $data['folder'] = keepByValue($data['folder'],'folder_name','工作');
+        }
+
         for ($i = 0; $i < count($data['folder']); $i++) {
-            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
+            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
+            if ($data['cookie_level']!="all"){
+                $data['folder'][$i]["subfolder"] = delByValue($data['folder'][$i]["subfolder"],'folder_name','个人');
+            }
+            if ($data['cookie_level']=="work"){
+                $data['folder'][$i]["subfolder"] = keepByValue($data['folder'][$i]["subfolder"],'folder_name','工作');
+            }
         }
         $data['folder'][] = array("id" => "0", "folder_name" => "根目录");   //不能直接放到第一位
         array_unshift($data['folder'], array_pop($data['folder']));         //把最后一个元素移到第一位
 
         $data['bookmark'] = array();
-        $data['bookmark'][] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => 0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
-        $folder0 = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        if ($data['cookie_level']!="work") {
+            $data['bookmark'][] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $data['cookie_teacher_id'], 'folder_id' => 0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+        }
+        $folder0 = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        if ($data['cookie_level']!="all") {
+            $folder0 = delByValue($folder0, 'folder_name', '个人');
+        }
+        if ($data['cookie_level']=="work"){
+            $folder0 = keepByValue($folder0, 'folder_name', '工作');
+        }
         foreach ($folder0 as $item0) {
             $data['bookmark'][$item0['folder_name']] = array();
-            $data['bookmark'][$item0['folder_name']][] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => $item0['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+            $data['bookmark'][$item0['folder_name']][] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $data['cookie_teacher_id'], 'folder_id' => $item0['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
             $father_id1 = $item0['id'];
-            $folder1 = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $father_id1), array("convert(folder_name using gbk)" => "asc"));
+            $folder1 = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => $father_id1), array("convert(folder_name using gbk)" => "asc"));
+            if ($data['cookie_level']!="all") {
+                $folder1 = delByValue($folder1, 'folder_name', '个人');
+            }
+            if ($data['cookie_level']=="work") {
+                $folder1 = keepByValue($folder1, 'folder_name', '工作');
+            }
             foreach ($folder1 as $item1) {
                 $data['bookmark'][$item0['folder_name']][$item1['folder_name']] = array();
-                $data['bookmark'][$item0['folder_name']][$item1['folder_name']][] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => $item1['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+                $data['bookmark'][$item0['folder_name']][$item1['folder_name']][] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $data['cookie_teacher_id'], 'folder_id' => $item1['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
             }
         }
-
-
-        /*
-                $temp_id = $_SESSION["teacher_id"];
-                $sql = "select * from bm_bookmark where is_private=0 or (is_private=1 and teacher_id='$temp_id') order by tag desc";
-                $query = $this->db->query($sql);
-                $data['bookmark'] = $query->result_array();
-        */
-
         $this->load->view('templates/header', $data);
         $this->load->view('teachers/home', $data);
         $this->load->view('templates/footer');
@@ -139,11 +160,11 @@ class User extends User_Data
     {
         $data = $this->general_data;
         $data['title'] = $data['teacher_item']['name'] . '的书签';
-        $data['bookmark'] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id']), array("folder_id" => "desc", "tag" => "desc", "convert(title using gbk)" => "asc"));
-        $data['tag'] = $this->all_model->general_select("bm_bookmark", "tag", array("teacher_id" => $_SESSION['teacher_id'], "tag!=" => ""), null, null, "tag");
-        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        $data['bookmark'] = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $data['cookie_teacher_id']), array("folder_id" => "desc", "tag" => "desc", "convert(title using gbk)" => "asc"));
+        $data['tag'] = $this->all_model->general_select("bm_bookmark", "tag", array("teacher_id" => $data['cookie_teacher_id'], "tag!=" => ""), null, null, "tag");
+        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
         for ($i = 0; $i < count($data['folder']); $i++) {
-            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
+            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
         }
         $data['folder'][] = array("id" => "0", "folder_name" => "根目录");   //不能直接放到第一位
         array_unshift($data['folder'], array_pop($data['folder']));         //把最后一个元素移到第一位
@@ -162,17 +183,26 @@ class User extends User_Data
                 'is_private' => $this->input->post('is_private') ? 1 : 0,    //当is_private为null时使用0
             );
             if ($this->input->post('submit') == "addnew") {
-                $update_arr["teacher_id"] = $_SESSION['teacher_id'];
+                $update_arr["teacher_id"] = $data['cookie_teacher_id'];
                 $update_arr["createtime"] = date("Y-m-d H:i:s");
                 $paresed_url = parse_url($this->input->post('url'));
                 if (check_remote_file_exists($paresed_url['scheme'] . '://' . $paresed_url['host'] . '/favicon.ico')) {
                     $update_arr["icon_uri"] = $paresed_url['scheme'] . '://' . $paresed_url['host'] . '/favicon.ico';
                 }
                 $this->all_model->general_insert("bm_bookmark", $update_arr);
-            } elseif ($this->input->post('submit') == "update") {
-                $this->all_model->general_update("bm_bookmark", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+            } elseif ($this->input->post('submit') == "addnew_home") {
+                $update_arr["teacher_id"] = $data['cookie_teacher_id'];
+                $update_arr["createtime"] = date("Y-m-d H:i:s");
+                $paresed_url = parse_url($this->input->post('url'));
+                if (check_remote_file_exists($paresed_url['scheme'] . '://' . $paresed_url['host'] . '/favicon.ico')) {
+                    $update_arr["icon_uri"] = $paresed_url['scheme'] . '://' . $paresed_url['host'] . '/favicon.ico';
+                }
+                $this->all_model->general_insert("bm_bookmark", $update_arr);
+                redirect('user/home/');
+            }elseif ($this->input->post('submit') == "update") {
+                $this->all_model->general_update("bm_bookmark", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $data['cookie_teacher_id']));
             } elseif ($this->input->post('submit') == "delete") {
-                $this->all_model->general_delete("bm_bookmark", array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+                $this->all_model->general_delete("bm_bookmark", array("id" => $this->input->post('id'), "teacher_id" => $data['cookie_teacher_id']));
             }
             redirect('user/manage_bookmark/#' . $this->input->post('id'));
         }
@@ -210,7 +240,7 @@ class User extends User_Data
         $data['grade'] = $grade;
         $data['subject_id'] = $subject_id;
 
-        $data['teachers'] = $this->all_model->general_select("bm_user", "id,name", array("employed" => 0));
+        $data['teachers'] = $this->all_model->general_select("bm_user", "id,name", null);
         $data['teacher_arr'] = array();
         foreach ($data['teachers'] as $item):
             $data['teacher_arr'][$item['id']] = $item['name'];
@@ -269,7 +299,7 @@ class User extends User_Data
         if ($category_id != "-") {
             $where_arr["category_id"] = $category_id;
         }
-        $where_arr["upload_teacher_id"] = $_SESSION['teacher_id'];
+        $where_arr["upload_teacher_id"] = $data['cookie_teacher_id'];
 
         $limit = 50;
 
@@ -283,7 +313,7 @@ class User extends User_Data
         $data['curent_page'] = $page;
         $this->load->library('pagination');
         $config['base_url'] = site_url('user/my_documents/' . $grade . '/' . $subject_id . '/' . $category_id);
-        $config['total_rows'] = $this->all_model->general_get_amount('bm_documents', array('upload_teacher_id' => $_SESSION['teacher_id']), null);
+        $config['total_rows'] = $this->all_model->general_get_amount('bm_documents', array('upload_teacher_id' => $data['cookie_teacher_id']), null);
         $config['per_page'] = $limit;
         $config['full_tag_open'] = '<ul class="pagination">';
         $config['full_tag_close'] = '</ul>';
@@ -398,7 +428,7 @@ class User extends User_Data
     {
         $data = $this->general_data;
         $document = $this->all_model->general_get('bm_documents', array("id" => $id));
-        if (($document['is_private'] == 1 && $document['upload_teacher_id'] == $_SESSION['teacher_id']) || $document['is_private'] == 0) {
+        if (($document['is_private'] == 1 && $document['upload_teacher_id'] == $data['cookie_teacher_id']) || $document['is_private'] == 0) {
             $filename = $document['path'] . $document['real_filename'];
             $out_filename = $document['original_filename'];
             if (!file_exists($filename)) {
@@ -447,7 +477,7 @@ class User extends User_Data
     public function self_delete_document($grade, $subject_id, $category_id, $id)
     {
         $data = $this->general_data;
-        $array = array('id' => $id, "upload_teacher_id" => $_SESSION['teacher_id']);
+        $array = array('id' => $id, "upload_teacher_id" => $data['cookie_teacher_id']);
         $data['result'] = $this->all_model->general_get('bm_documents', $array);
         if (is_file($data['result']['path'] . "thumb_" . $data['result']['real_filename'])) {
             unlink($data['result']['path'] . "thumb_" . $data['result']['real_filename']);
@@ -488,7 +518,7 @@ class User extends User_Data
     public function self_delete_document_qiniu($grade, $subject_id, $category_id, $id)
     {
         $data = $this->general_data;
-        $array = array('id' => $id, "upload_teacher_id" => $_SESSION['teacher_id']);
+        $array = array('id' => $id, "upload_teacher_id" => $data['cookie_teacher_id']);
         $data['result'] = $this->all_model->general_get('bm_documents', $array);
         if (is_file($data['result']['path'] . "/thumb_" . $data['result']['rndstring'] . ".jpg")) {
             unlink($data['result']['path'] . "/thumb_" . $data['result']['rndstring'] . ".jpg");
@@ -508,7 +538,7 @@ class User extends User_Data
     public function self_edit_document($grade, $subject_id, $category_id, $id)
     {
         $data = $this->general_data;
-        $where_arr = array('id' => $id, "upload_teacher_id" => $_SESSION['teacher_id']);
+        $where_arr = array('id' => $id, "upload_teacher_id" => $data['cookie_teacher_id']);
         $data['document'] = $this->all_model->general_get('bm_documents', $where_arr);
         $data['document_categories'] = $this->all_model->general_load2('bm_document_categories', array("sort" => "DESC"));
         $data['subjects'] = $this->all_model->general_list("bm_subjects", array("id!=" => "-1"), array("sort" => "desc"));
@@ -541,7 +571,6 @@ class User extends User_Data
     public function edit_teacher($id)
     {
         $data = $this->general_data;
-        require_authority(array("au_teacher_manage"), $data['authority']);
         $data['teacher'] = $this->all_model->general_get("bm_user", array("id" => $id));
         $data['counties'] = $this->all_model->general_load("xz_counties", "sort", "desc");
         $data['parties'] = $this->all_model->general_load("xz_parties", "sort", "desc");
@@ -593,7 +622,7 @@ class User extends User_Data
     public function self_edit_teacher()
     {
         $data = $this->general_data;
-        $data['teacher'] = $this->all_model->general_get("bm_user", array("id" => $_SESSION['teacher_id']));
+        $data['teacher'] = $this->all_model->general_get("bm_user", array("id" => $data['cookie_teacher_id']));
         $data['title'] = "编辑个人资料";
         $this->form_validation->set_rules('teacher_id', 'id', 'required');
 
@@ -611,12 +640,12 @@ class User extends User_Data
                     $update_arr[$x_key] = $x_value;
                 }
             endforeach;
-            if ($this->all_model->general_get_amount('bm_user', array("id!=" => $_SESSION['teacher_id'], "name" => $this->input->post('name'))) > 0) {
+            if ($this->all_model->general_get_amount('bm_user', array("id!=" => $data['cookie_teacher_id'], "name" => $this->input->post('name'))) > 0) {
                 $_SESSION['err_msg'] = err_msg("已存在相同昵称！");
-            } elseif ($this->all_model->general_get_amount('bm_user', array("id!=" => $_SESSION['teacher_id'], "email" => $this->input->post('email'))) > 0) {
+            } elseif ($this->all_model->general_get_amount('bm_user', array("id!=" => $data['cookie_teacher_id'], "email" => $this->input->post('email'))) > 0) {
                 $_SESSION['err_msg'] = err_msg("已存在相同电子邮件！");
             } else {
-                $this->all_model->general_update("bm_user", $update_arr, array("id" => $_SESSION['teacher_id']));
+                $this->all_model->general_update("bm_user", $update_arr, array("id" => $data['cookie_teacher_id']));
             }
             redirect('user/self_edit_teacher');
         }
@@ -655,7 +684,12 @@ class User extends User_Data
         $reTag = "/<title>([\s\S]*?)<\/title>/i";
         preg_match($reTag, $html, $match);
         $title = $match[1];
-        echo $title;
+        if ($title==""||$title==null){
+            echo "！未获取到网站标题";
+        }
+        else{
+            echo $title;
+        }
         //$arr = Curl::post('http://localhost:9090/test.php', array('a'=>1,'b'=>2));
     }
 
@@ -663,10 +697,10 @@ class User extends User_Data
     public function manage_folder()
     {
         $data = $this->general_data;
-        $data['select_folder'] = $this->all_model->general_select("bm_folder", "id,folder_name", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1));
-        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        $data['select_folder'] = $this->all_model->general_select("bm_folder", "id,folder_name", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => -1));
+        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
         for ($i = 0; $i < count($data['folder']); $i++) {
-            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
+            $data['folder'][$i]["subfolder"] = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => $data['folder'][$i]['id']), array("convert(folder_name using gbk)" => "asc"));
         }
         $data['title'] = '管理目录';
         $this->form_validation->set_rules('submit', 'submit', 'required');
@@ -684,48 +718,48 @@ class User extends User_Data
                     $update_arr[$x_key] = $x_value;
                 }
             endforeach;
-            $update_arr["teacher_id"] = $_SESSION['teacher_id'];
+            $update_arr["teacher_id"] = $data['cookie_teacher_id'];
             if ($this->input->post('submit') == "add_folder") {   //添加一级目录
-                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $_SESSION['teacher_id'], "folder_name" => $this->input->post('folder_name'))) > 0) {
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $data['cookie_teacher_id'], "folder_name" => $this->input->post('folder_name'))) > 0) {
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
                 } else {
                     $update_arr["father_id"] = -1;
                     $this->all_model->general_insert('bm_folder', $update_arr);
                 }
             } elseif ($this->input->post('submit') == "add_subfolder") {     //添加二级目录
-                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $this->input->post('father_id'), "folder_name" => $this->input->post('folder_name'))) > 0) {
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $data['cookie_teacher_id'], "father_id" => $this->input->post('father_id'), "folder_name" => $this->input->post('folder_name'))) > 0) {
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
                 } else {
                     $this->all_model->general_insert('bm_folder', $update_arr);
                 }
             }
             elseif ($this->input->post('submit') == "empty_root") {     //清空根目录
-                $this->all_model->general_delete('bm_bookmark', array("folder_id" => 0, "teacher_id" => $_SESSION['teacher_id']));
+                $this->all_model->general_delete('bm_bookmark', array("folder_id" => 0, "teacher_id" => $data['cookie_teacher_id']));
             } elseif ($this->input->post('submit') == "empty_folder") {     //清空一二级目录
-                $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+                $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'), "teacher_id" => $data['cookie_teacher_id']));
             } elseif ($this->input->post('submit') == "delete_subfolder") {     //删除二级目录
-                $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
-                $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+                $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'), "teacher_id" => $data['cookie_teacher_id']));
+                $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'), "teacher_id" => $data['cookie_teacher_id']));
             }  elseif ($this->input->post('submit') == "delete_folder") {       //删除一级目录
                 //先要遍历子目录的id再删
-                $sub_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $this->input->post('id')));
+                $sub_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => $this->input->post('id')));
                 foreach ($sub_folder as $item) {
-                    $this->all_model->general_delete('bm_bookmark', array("folder_id" => $item['id'], "teacher_id" => $_SESSION['teacher_id']));
-                    $this->all_model->general_delete('bm_folder', array("id" => $item['id'], "teacher_id" => $_SESSION['teacher_id']));
+                    $this->all_model->general_delete('bm_bookmark', array("folder_id" => $item['id'], "teacher_id" => $data['cookie_teacher_id']));
+                    $this->all_model->general_delete('bm_folder', array("id" => $item['id'], "teacher_id" => $data['cookie_teacher_id']));
                 }
-                $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
-                $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+                $this->all_model->general_delete('bm_bookmark', array("folder_id" => $this->input->post('id'), "teacher_id" => $data['cookie_teacher_id']));
+                $this->all_model->general_delete('bm_folder', array("id" => $this->input->post('id'), "teacher_id" => $data['cookie_teacher_id']));
             } elseif ($this->input->post('submit') == "update_subfolder") {              //修改二级目录
-                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $this->input->post('father_id'), "folder_name" => $this->input->post('folder_name'))) > 0) {
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $data['cookie_teacher_id'], "father_id" => $this->input->post('father_id'), "folder_name" => $this->input->post('folder_name'))) > 0) {
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
                 } else {
-                    $this->all_model->general_update("bm_folder", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+                    $this->all_model->general_update("bm_folder", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $data['cookie_teacher_id']));
                 }
             } else {     //修改一级目录
-                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1, "folder_name" => $this->input->post('folder_name'))) > 0) {
+                if ($this->all_model->general_get_amount('bm_folder', array("teacher_id" => $data['cookie_teacher_id'], "father_id" => -1, "folder_name" => $this->input->post('folder_name'))) > 0) {
                     $_SESSION['err_msg'] = err_msg("已存在同名目录！");
                 } else {
-                    $this->all_model->general_update("bm_folder", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $_SESSION['teacher_id']));
+                    $this->all_model->general_update("bm_folder", $update_arr, array("id" => $this->input->post('id'), "teacher_id" => $data['cookie_teacher_id']));
                 }
             }
             redirect('user/manage_folder/');
@@ -737,7 +771,7 @@ class User extends User_Data
     {
         $data = $this->general_data;
         $data['title'] = '导入浏览器收藏夹';
-        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1));
+        $data['folder'] = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => -1));
         $this->form_validation->set_rules('json_string', '文件', 'required');
         $data['output'] = array();
         if ($_POST["submit"] != "submit") {
@@ -753,9 +787,9 @@ class User extends User_Data
                 if (is_bookmark_folder($arr[$root_name][$i])) {
                     $root_name1 = array_key_first($arr[$root_name][$i]);
                     //echo $root_name1 . "<br>";
-                    $tmp1 = $this->all_model->general_select("bm_folder", "id", array("folder_name" => $root_name1, "teacher_id" => $_SESSION['teacher_id']));
+                    $tmp1 = $this->all_model->general_select("bm_folder", "id", array("folder_name" => $root_name1, "teacher_id" => $data['cookie_teacher_id']));
                     if ($tmp1 == null) {
-                        $folder_id1 = $this->all_model->general_insert('bm_folder', array("folder_name" => $root_name1, "teacher_id" => $_SESSION['teacher_id']));
+                        $folder_id1 = $this->all_model->general_insert('bm_folder', array("folder_name" => $root_name1, "teacher_id" => $data['cookie_teacher_id']));
                         $data['output'][] = "目录[" . $root_name1 . "]插入成功";
                     } else {
                         $folder_id1 = $tmp1[0]['id'];
@@ -765,9 +799,9 @@ class User extends User_Data
                         if (is_bookmark_folder($arr[$root_name][$i][$root_name1][$j])) {
                             $root_name2 = array_key_first($arr[$root_name][$i][$root_name1][$j]);
                             //echo $root_name2 . "<br>";
-                            $tmp2 = $this->all_model->general_select("bm_folder", "id", array("folder_name" => $root_name2, "teacher_id" => $_SESSION['teacher_id'], "father_id" => $folder_id1));
+                            $tmp2 = $this->all_model->general_select("bm_folder", "id", array("folder_name" => $root_name2, "teacher_id" => $data['cookie_teacher_id'], "father_id" => $folder_id1));
                             if ($tmp2 == null) {
-                                $folder_id2 = $this->all_model->general_insert('bm_folder', array("folder_name" => $root_name2, "teacher_id" => $_SESSION['teacher_id'], "father_id" => $folder_id1));
+                                $folder_id2 = $this->all_model->general_insert('bm_folder', array("folder_name" => $root_name2, "teacher_id" => $data['cookie_teacher_id'], "father_id" => $folder_id1));
                                 $data['output'][] = "目录[" . $root_name2 . "]插入成功";
                             } else {
                                 $folder_id2 = $tmp2[0]['id'];
@@ -779,10 +813,10 @@ class User extends User_Data
                                     $root_name3 = array_key_first($arr[$root_name][$i][$root_name1][$j][$root_name2][$k]);
                                     for ($l = 0; $l < count($arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3]); $l++) {
                                         if (!is_bookmark_folder($arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l])) {
-                                            if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"], "teacher_id" => $_SESSION['teacher_id'])) == 0) {
+                                            if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"], "teacher_id" => $data['cookie_teacher_id'])) == 0) {
                                                 //echo "aaaaa" . $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"] . "<br>";
                                                 $insert_arr = array();
-                                                $insert_arr['teacher_id'] = $_SESSION['teacher_id'];
+                                                $insert_arr['teacher_id'] = $data['cookie_teacher_id'];
                                                 $insert_arr["createtime"] = date("Y-m-d H:i:s");
                                                 $insert_arr["title"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["name"];
                                                 $insert_arr["url"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k][$root_name3][$l]["href"];
@@ -798,9 +832,9 @@ class User extends User_Data
                                         }
                                     }
                                 } else {
-                                    if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["href"], "teacher_id" => $_SESSION['teacher_id'])) == 0) {
+                                    if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["href"], "teacher_id" => $data['cookie_teacher_id'])) == 0) {
                                         $insert_arr = array();
-                                        $insert_arr['teacher_id'] = $_SESSION['teacher_id'];
+                                        $insert_arr['teacher_id'] = $data['cookie_teacher_id'];
                                         $insert_arr["createtime"] = date("Y-m-d H:i:s");
                                         $insert_arr["title"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["name"];
                                         $insert_arr["url"] = $arr[$root_name][$i][$root_name1][$j][$root_name2][$k]["href"];
@@ -815,9 +849,9 @@ class User extends User_Data
                                 }
                             }
                         } else {
-                            if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i][$root_name1][$j]["href"], "teacher_id" => $_SESSION['teacher_id'])) == 0) {
+                            if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i][$root_name1][$j]["href"], "teacher_id" => $data['cookie_teacher_id'])) == 0) {
                                 $insert_arr = array();
-                                $insert_arr['teacher_id'] = $_SESSION['teacher_id'];
+                                $insert_arr['teacher_id'] = $data['cookie_teacher_id'];
                                 $insert_arr["createtime"] = date("Y-m-d H:i:s");
                                 $insert_arr["title"] = $arr[$root_name][$i][$root_name1][$j]["name"];
                                 $insert_arr["url"] = $arr[$root_name][$i][$root_name1][$j]["href"];
@@ -832,9 +866,9 @@ class User extends User_Data
                         }
                     }
                 } else {
-                    if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i]["href"], "teacher_id" => $_SESSION['teacher_id'])) == 0) {
+                    if ($this->all_model->general_get_amount("bm_bookmark", array("url" => $arr[$root_name][$i]["href"], "teacher_id" => $data['cookie_teacher_id'])) == 0) {
                         $insert_arr = array();
-                        $insert_arr['teacher_id'] = $_SESSION['teacher_id'];
+                        $insert_arr['teacher_id'] = $data['cookie_teacher_id'];
                         $insert_arr["createtime"] = date("Y-m-d H:i:s");
                         $insert_arr["title"] = $arr[$root_name][$i]["name"];
                         $insert_arr["url"] = $arr[$root_name][$i]["href"];
@@ -860,22 +894,22 @@ class User extends User_Data
         $data = $this->general_data;
         $out = '<DL><p>';
         $out = $out . "\n";
-        $root_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => 0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+        $root_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $data['cookie_teacher_id'], 'folder_id' => 0), array("tag" => "desc", "convert(title using gbk)" => "asc"));
         foreach ($root_bookmark as $item) {
             $out = $out . '<DT><A HREF="' . $item['url'] . '" ADD_DATE="' . $item['timestamp'] . '" ICON="' . $item['icon'] . '" ICON_URI="' . $item['icon_uri'] . '">' . $item['title'] . '</A></DT>';
             $out = $out . "\n";
         }
-        $lv1_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
+        $lv1_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => -1), array("convert(folder_name using gbk)" => "asc"));
         foreach ($lv1_folder as $lv1_folder_item) {
             $out = $out . '<DT><H3 ADD_DATE="' . $lv1_folder_item['timestamp'] . '">' . $lv1_folder_item['folder_name'] . '</H3></DT>';
             $out = $out . "\n";
             $out = $out . '<DL><p>';
             $out = $out . "\n";
-            $lv2_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $_SESSION['teacher_id'], "father_id" => $lv1_folder_item['id']), array("convert(folder_name using gbk)" => "asc"));
+            $lv2_folder = $this->all_model->general_list("bm_folder", array("teacher_id" => $data['cookie_teacher_id'], "father_id" => $lv1_folder_item['id']), array("convert(folder_name using gbk)" => "asc"));
             foreach ($lv2_folder as $lv2_folder_item) {
                 $out = $out . '<DT><H3 ADD_DATE="' . $lv2_folder_item['timestamp'] . '">' . $lv2_folder_item['folder_name'] . '</H3></DT>';
                 $out = $out . "\n";
-                $lv2_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => $lv2_folder_item['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+                $lv2_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $data['cookie_teacher_id'], 'folder_id' => $lv2_folder_item['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
                 if ($lv2_bookmark != null) {
                     $out = $out . '<DL><p>';
                     $out = $out . "\n";
@@ -887,7 +921,7 @@ class User extends User_Data
                     $out = $out . "\n";
                 }
             }
-            $lv1_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $_SESSION['teacher_id'], 'folder_id' => $lv1_folder_item['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
+            $lv1_bookmark = $this->all_model->general_list("bm_bookmark", array("teacher_id" => $data['cookie_teacher_id'], 'folder_id' => $lv1_folder_item['id']), array("tag" => "desc", "convert(title using gbk)" => "asc"));
             foreach ($lv1_bookmark as $lv1_bookmark_item) {
                 $out = $out . '<DT><A HREF="' . $lv1_bookmark_item['url'] . '" ADD_DATE="' . $lv1_bookmark_item['timestamp'] . '" ICON="' . $lv1_bookmark_item['icon'] . '" ICON_URI="' . $lv1_bookmark_item['icon_uri'] . '">' . $lv1_bookmark_item['title'] . '</A></DT>';
                 $out = $out . "\n";

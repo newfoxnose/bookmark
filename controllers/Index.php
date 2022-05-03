@@ -61,26 +61,24 @@ class Index extends Index_Data
             if ($email == '') {
                 $_SESSION['err_msg'] = err_msg("邮箱格式不正确");
                 redirect('index/reg');
-            }
-            elseif($password == ''){
+            } elseif ($password == '') {
                 $_SESSION['err_msg'] = err_msg("密码输入不符合要求");
                 redirect('index/reg');
-            }
-            elseif($password!=$password2){
+            } elseif ($password != $password2) {
                 $_SESSION['err_msg'] = err_msg("两次密码不一致");
                 redirect('index/reg');
-            }
-            else {
+            } else {
                 if ($this->all_model->general_get_amount('bm_user', array("email" => $email)) > 0) {
                     $_SESSION['err_msg'] = err_msg("该邮箱已被注册");
                     redirect('index/reg');
                 } else {
                     $update_arr = array();
-                    $update_arr['name']=rand_name().rand_str(3).mt_rand(100,999);
-                    $update_arr['email']=$email;
-                    $update_arr['password']=md5($password);
-                    $update_arr['employed']=0;
-                    $update_arr['createtime']=date("Y-m-d H:i:s");
+                    $update_arr['name'] = rand_name() . rand_str(3) . mt_rand(100, 999);
+                    $update_arr['email'] = $email;
+                    $update_arr['password'] = md5($password);
+                    $update_arr['password_work'] = md5($password . "1");
+                    $update_arr['password_private'] = md5($password . "2");
+                    $update_arr['createtime'] = date("Y-m-d H:i:s");
                     $this->all_model->general_insert("bm_user", $update_arr);
                     $_SESSION['err_msg'] = err_msg("注册成功，请登录");
                     redirect('index/login');
@@ -89,7 +87,7 @@ class Index extends Index_Data
         }
     }
 
-//老师和学生登入
+//登入
     public function login()
     {
         $data['title'] = '登陆';
@@ -103,18 +101,29 @@ class Index extends Index_Data
             $this->load->view('templates/footer');
         } else {
             $email = $this->input->post('email');
-            $password = md5($this->input->post('password'));
-            $data['teacher_item'] = $this->all_model->general_get("bm_user", array("email" => $email, "password" => $password, "employed" => 0));
-            if ($data['teacher_item'] != NULL) {
-                if ($data['teacher_item']['employed'] == 0) {
-                    $_SESSION['login'] = "yes";
-                    $_SESSION['teacher_id'] = $data['teacher_item']['id'];
-                    redirect('user/home');
-                } else {
-                    $this->load->view('templates/public_header', $data);
-                    $this->load->view('index/login', $data);
-                    $this->load->view('templates/footer');
-                }
+            $password = $this->input->post('password');
+            $data['teacher_item'] = $this->all_model->general_get("bm_user", array("email" => $email));
+            if ($data['teacher_item']['password_private'] == md5($password)) {
+                set_cookie("login", encode("yes"), 3600 * 24 * 30);    //ci最后一个参数是cookie的生存时长
+                set_cookie("teacher_id", encode($data['teacher_item']['id']), 3600 * 24 * 30);
+                set_cookie("level", encode("all"), 3600 * 24 * 30);
+                //setcookie("login","yes",time()+3600*24*30);        //原生的设置方法无效，用ci的。原生的最后一个参数是过期时间戳
+                //setcookie("teacher_id",$data['teacher_item']['id'],time()+3600*24*30);
+                redirect('user/home');
+            } elseif ($data['teacher_item']['password'] == md5($password)) {
+                set_cookie("login", encode("yes"), 3600 * 24 * 30);    //ci最后一个参数是cookie的生存时长
+                set_cookie("teacher_id", encode($data['teacher_item']['id']), 3600 * 24 * 30);
+                set_cookie("level", encode("normal"), 3600 * 24 * 30);
+                //setcookie("login","yes",time()+3600*24*30);        //原生的设置方法无效，用ci的。原生的最后一个参数是过期时间戳
+                //setcookie("teacher_id",$data['teacher_item']['id'],time()+3600*24*30);
+                redirect('user/home');
+            } elseif ($data['teacher_item']['password_work'] == md5($password)) {
+                set_cookie("login", encode("yes"), 3600 * 24 * 30);    //ci最后一个参数是cookie的生存时长
+                set_cookie("teacher_id", encode($data['teacher_item']['id']), 3600 * 24 * 30);
+                set_cookie("level", encode("work"), 3600 * 24 * 30);
+                //setcookie("login","yes",time()+3600*24*30);        //原生的设置方法无效，用ci的。原生的最后一个参数是过期时间戳
+                //setcookie("teacher_id",$data['teacher_item']['id'],time()+3600*24*30);
+                redirect('user/home');
             } else {
                 $this->load->view('templates/public_header', $data);
                 $this->load->view('index/login', $data);
@@ -128,8 +137,9 @@ class Index extends Index_Data
     public function logout()
     {
         $data['title'] = '已登出';
-        unset($_SESSION['login']);
-        unset($_SESSION['teacher_id']);
+        delete_cookie('login');
+        delete_cookie('teacher_id');
+        delete_cookie('level');
         $this->load->view('templates/public_header', $data);
         $this->load->view('index/login', $data);
         $this->load->view('templates/footer');
@@ -138,7 +148,7 @@ class Index extends Index_Data
 //公开书签
     public function bookmark($email = null)
     {
-        $data['teachers'] = $this->all_model->general_select("bm_user", "id,name", array("employed" => 0));
+        $data['teachers'] = $this->all_model->general_select("bm_user", "id,name", null);
         if ($email == null) {
             $data['title'] = '公开书签';
             $sql = "select * from bm_bookmark where is_private=0 order by tag desc";
@@ -153,7 +163,6 @@ class Index extends Index_Data
                 $teacher_id = $teacher['id'];
                 $sql = "select * from bm_bookmark where is_private=0 and teacher_id='$teacher_id' order by tag desc";
             }
-
         }
         $query = $this->db->query($sql);
         $data['bookmark'] = $query->result_array();
@@ -291,8 +300,8 @@ class Index extends Index_Data
         if ($type == 0) {
             $user = $this->all_model->general_get("bm_wx_user", array('student_id' => $id, 'openid' => $openid), "student_id");
             if ($user != null) {
-                $_SESSION['student_login'] = "yes";
-                $_SESSION['student_id'] = $user['student_id'];
+                set_cookie("student_login", "yes", 3600 * 24 * 30);
+                set_cookie("student_id", $user['student_id'], 3600 * 24 * 30);
                 redirect('student/index');
             } else {
                 redirect('index/access_forbidden');
@@ -300,8 +309,8 @@ class Index extends Index_Data
         } else {
             $user = $this->all_model->general_get("bm_wx_user", array('teacher_id' => $id, 'openid' => $openid), "teacher_id");
             if ($user != null) {
-                $_SESSION['login'] = "yes";
-                $_SESSION['teacher_id'] = $user['teacher_id'];
+                set_cookie("login", "yes", 3600 * 24 * 30);
+                set_cookie("teacher_id", $user['teacher_id'], 3600 * 24 * 30);
                 redirect('user/home');
             } else {
                 redirect('index/access_forbidden');
@@ -390,7 +399,7 @@ class Index extends Index_Data
     public function addressbook_json($openid)
     {
         $data['title'] = '通讯录';
-        $data['teachers'] = $this->all_model->general_list("bm_user", array("employed" => 0), array("convert(name using gbk)" => "asc"));
+        $data['teachers'] = $this->all_model->general_list("bm_user", null, array("convert(name using gbk)" => "asc"));
         for ($i = 0; $i < count($data['teachers']); $i++) {
             $data['teachers'][$i]['show'] = true;
             $data['teachers'][$i]['search'] = $data['teachers'][$i]['name'] . $data['teachers'][$i]['phone'];

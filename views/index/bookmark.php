@@ -18,7 +18,7 @@
     <h2><?php echo $title; ?>
         <span class="small pull-right">
             <?php
-            if ($_SESSION['login'] == "yes"){
+            if (get_cookie(get_cookie('login')) == "yes"){
                 echo '<a href="'.site_url('user/home/').'">我的首页</a>';
                 echo ' | ';
                 echo '<a href="'.site_url('index/logout/').'">退出</a>';

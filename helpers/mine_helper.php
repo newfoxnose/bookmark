@@ -678,22 +678,6 @@ function match_chinese($chars, $encoding = 'utf8')
     return $temp;
 }
 
-function require_authority($array, $authority, $self_id = null)
-{
-    if ($array != null && $authority != null) {
-        for ($i = 0; $i < count($array); $i++) {
-            if (in_array($array[$i], $authority)) {
-                return true;
-            }
-        }
-    }
-    if ($self_id != null) {
-        if ($self_id == $_SESSION['teacher_id']) {
-            return true;
-        }
-    }
-    show_error("错误：没有权限", "", $heading = 'An Error Was Encountered');
-}
 
 function require_self($id)
 {
@@ -988,6 +972,9 @@ function check_remote_file_exists($url)
     $curl = curl_init($url);
 // 不取回数据
     curl_setopt($curl, CURLOPT_NOBODY, true);
+// 不验证https
+    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+    curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
 // 发送请求
     $result = curl_exec($curl);
     $found = false;
@@ -1136,5 +1123,71 @@ function rand_str($len)
         $string=$string.substr($chars,rand(0,strlen($chars)),1);
     }
     return $string;
+}
+
+
+/**
+ * 简单对称加密算法之加密
+ * @param String $string 需要加密的字串
+ * @param String $skey 加密EKY
+ * @author Anyon Zou <zoujingli@qq.com>
+ * @date 2013-08-13 19:30
+ * @update 2014-10-10 10:10
+ * @return String
+ */
+function encode($string = '', $skey = 'i83jeu')
+{
+    $strArr = str_split(base64_encode($string));
+    $strCount = count($strArr);
+    foreach (str_split($skey) as $key => $value)
+        $key < $strCount && $strArr[$key] .= $value;
+    return str_replace(array('=', '+', '/'), array('O0O0O', 'o000o', 'oo00o'),
+        join('', $strArr));
+}
+
+/**
+ * 简单对称加密算法之解密
+ * @param String $string 需要解密的字串
+ * @param String $skey 解密KEY
+ * @author Anyon Zou <zoujingli@qq.com>
+ * @date 2013-08-13 19:30
+ * @update 2014-10-10 10:10
+ * @return String
+ */
+function decode($string = '', $skey = 'i83jeu')
+{
+    $strArr = str_split(str_replace(array('O0O0O', 'o000o', 'oo00o'),
+        array('=', '+', '/'), $string), 2);
+    $strCount = count($strArr);
+    foreach (str_split($skey) as $key => $value)
+        $key <= $strCount && isset($strArr[$key]) && $strArr[$key][1] === $value
+        && $strArr[$key] = $strArr[$key][0];
+    return base64_decode(join('', $strArr));
+}
+
+//根据指定键名的值删除数组元素
+function delByValue($arr,$key, $value){
+    if(!is_array($arr)){
+        return $arr;
+    }
+    foreach($arr as $k=>$v){
+        if($v[$key] == $value){
+            unset($arr[$k]);
+        }
+    }
+    return $arr;
+}
+
+//只保留指定键名的值
+function keepByValue($arr,$key, $value){
+    if(!is_array($arr)){
+        return $arr;
+    }
+    foreach($arr as $k=>$v){
+        if($v[$key] != $value){
+            unset($arr[$k]);
+        }
+    }
+    return $arr;
 }
 ?>

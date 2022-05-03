@@ -52,6 +52,7 @@
         <div class="collapse navbar-collapse" id="example-navbar-collapse">
             <ul class="nav navbar-nav">
                 <li><a href="<?php echo site_url('user/manage_bookmark/'); ?>">管理书签</a></li>
+                <li><a href="<?php echo site_url('user/manage_folder/'); ?>">管理目录</a></li>
                 <li><a href="<?php echo site_url('user/rt_note/'); ?>">随手记</a></li>
                 <li><a href="<?php echo site_url('user/calendar/'); ?>">行事历</a></li>
                 <li class="hide"><a href="<?php echo site_url('user/list_documents/-/-/-'); ?>">公共文档</a></li>

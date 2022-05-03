@@ -62,7 +62,7 @@
             </div>
         </div>
         <div class="col-xs-6 col-sm-1">
-            <button type="submit" name="submit" value="addnew" class="btn btn-success">添加</button>
+            <button type="submit" name="submit" value="addnew_home" class="btn btn-success">添加</button>
         </div>
     </div>
     </form>
@@ -167,12 +167,6 @@
         $('.tooltip-toggle').tooltip(
             {html: true}
         );
-
-        $("#fetch-title").click(function(){
-            $.get($("#url").val(),function(data,status){
-                alert("数据: " + data + "\n状态: " + status);
-            });
-        });
     });
 
 
