@@ -1175,7 +1175,7 @@ function delByValue($arr,$key, $value){
             unset($arr[$k]);
         }
     }
-    return $arr;
+    return array_values($arr);
 }
 
 //只保留指定键名的值
@@ -1188,6 +1188,6 @@ function keepByValue($arr,$key, $value){
             unset($arr[$k]);
         }
     }
-    return $arr;
+    return array_values($arr);
 }
 ?>

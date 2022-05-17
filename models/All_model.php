@@ -340,9 +340,14 @@ class All_model extends CI_Model
     }
 
 //通用的删除记录
-    public function general_delete($table, $array)
+    public function general_delete($table, $where_arr,$where_in_arr = null)
     {
-        $this->db->delete($table, $array);
+        if ($where_in_arr !== null) {
+            foreach ($where_in_arr as $item=>$value){
+                $this->db->where_in($item, $value);
+            }
+        }
+        $this->db->delete($table, $where_arr);
         //echo $this->db->last_query();    //这句话可以显示上一步执行的sql语句
         //die;
     }

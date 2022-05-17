@@ -51,18 +51,19 @@
         </div>
         <div class="collapse navbar-collapse" id="example-navbar-collapse">
             <ul class="nav navbar-nav">
-                <li><a href="<?php echo site_url('user/manage_bookmark/'); ?>">管理书签</a></li>
-                <li><a href="<?php echo site_url('user/manage_folder/'); ?>">管理目录</a></li>
                 <li><a href="<?php echo site_url('user/rt_note/'); ?>">随手记</a></li>
                 <li><a href="<?php echo site_url('user/calendar/'); ?>">行事历</a></li>
                 <li class="hide"><a href="<?php echo site_url('user/list_documents/-/-/-'); ?>">公共文档</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        设置
+                        管理
                         <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a href="<?php echo site_url('user/self_edit_teacher'); ?>">个人资料</a></li>
+                        <li><a href="<?php echo site_url('user/manage_folder/'); ?>">文件夹</a></li>
+                        <li><a href="<?php echo site_url('user/import/'); ?>">导入书签</a></li>
+                        <li><a href="<?php echo site_url('user/export/'); ?>">导出书签</a></li>
+                        <li><a href="<?php echo site_url('user/self_edit_teacher'); ?>">个人信息</a></li>
                         <li><a href="<?php echo site_url('user/pwd'); ?>">修改密码</a></li>
                     </ul>
                 </li>

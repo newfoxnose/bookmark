@@ -25,17 +25,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 |
 */
 switch ($_SERVER["SERVER_NAME"]) {
-    case "xz.gm.ws":
-        $config['base_url'] = 'http://xz.gm.ws/';
+    case "gm.ws":
+        $config['base_url'] = 'https://gm.ws/';
         break;
     case "127.0.0.1":
         $config['base_url'] = 'http://127.0.0.1/';
         break;
     case "bookmark.com":
         $config['base_url'] = 'http://bookmark.com/';
-        break;
-    case "xz.sleda.com":
-        $config['base_url'] = 'http://xz.sleda.com/';
         break;
     case "localhost":
         $config['base_url'] = 'http://localhost/';

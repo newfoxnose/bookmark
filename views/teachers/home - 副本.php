@@ -13,11 +13,10 @@
         padding-bottom: 10px;
     }
 
-    .edit_bookmark {
+    .edit_bookmark{
         cursor: url(<?php echo site_url('resource/images/pen.cur');?>), pointer;
     }
-
-    a {
+    a{
         text-decoration: none !important;
     }
 </style>
@@ -29,11 +28,11 @@
 
     function get_select_folder($sub_item, $select_folder, $level = 1, $folder_id = 0)
     {
-        $spaces = '';
-        for ($i = 0; $i < $level; $i++) {
-            $spaces = $spaces . "&nbsp;&nbsp;&nbsp;&nbsp;";
+        $spaces='';
+        for ($i=0;$i<$level;$i++){
+            $spaces=$spaces."&nbsp;&nbsp;&nbsp;&nbsp;";
         }
-        $out = '<option value="' . $sub_item['id'] . '" lv="' . $level . '">' . $spaces . $sub_item['folder_name'] . '</option>';
+        $out = '<option value="' . $sub_item['id'] . '" lv="' . $level . '">' . $spaces.$sub_item['folder_name'] . '</option>';
         if ($sub_item['subfolder'] != null) {
             foreach ($sub_item['subfolder'] as $item) {
                 $out = $out . get_select_folder($item, $select_folder, $level + 1);
@@ -41,11 +40,11 @@
         }
         return $out;
     }
-
     if ($cookie_level != 'work') {
         $select_folder = '<option value="-1" lv="-1">根目录</option>';
-    } else {
-        $select_folder = '';
+    }
+    else{
+        $select_folder='';
     }
     foreach ($folder as $item):
         $select_folder = $select_folder . '<option value="' . $item['id'] . '" lv="0">' . $item['folder_name'] . '</option>';
@@ -62,8 +61,7 @@
             <div class="input-group">
                 <input type="text" class="form-control" name="url" id="url" placeholder="网址">
                 <span class="input-group-btn">
-                        <button class="btn btn-default" type="button"><i class="fa fa-search"
-                                                                         onclick="getData()"></i></button>
+                        <button class="btn btn-default" type="button"><i class="fa fa-search" onclick="getData()"></i></button>
                     </span>
             </div>
         </div>
@@ -104,79 +102,41 @@
     //$json = json_encode($bookmark, JSON_UNESCAPED_UNICODE);
     //echo $json;
 
-
-    foreach ($root_bookmarks as $item) {
-        echo bookmark_output($item);
-    }
-
-    foreach ($folder as $item) {
-        echo folder_bookmark_output($item);
-    }
-
-    ///*
-    function folder_bookmark_output($folder_item)
-    {
-        $out = '';
-        if ($folder_item['subfolder'] != null || $folder_item['bookmarks'] != null) {
-            $out = $out . "<div><h2 class='folder_title' data-toggle='collapse' data-target='#" . $folder_item['id'] . "'><i class='fa fa-folder-open-o' aria-hidden='true'></i>  " . $folder_item['folder_name'] . "</h2>\n";
-            $out = $out . "<div class='sub_folder collapse in' id='" . $folder_item['id'] . "'>\n";
-            if ($folder_item['bookmarks'] != null) {
-                $out = $out . bookmark_output($folder_item['bookmarks']);
-            }
-            if ($folder_item['subfolder'] != null) {
-
-                foreach ($folder_item['subfolder'] as $item) {
-                    $out = $out . folder_bookmark_output($item);
+    foreach ($bookmark as $key0 => $value0) {
+        if (is_string($key0)) {
+            echo "<div class='sub_folder'>";
+            echo "<h2 data-toggle='collapse' data-target='#" . $key0 . "'>" . $key0 . "</h2>";
+            echo "<div id='" . $key0 . "' class='collapse'>";
+            foreach ($value0 as $key1 => $value1) {
+                if (is_string($key1)) {
+                    echo "<div class='sub_folder'>";
+                    echo "<h3 data-toggle='collapse' data-target='#" . $key0 . $key1 . "'>" . $key1 . "</h3>";
+                    echo "<div id='" . $key0 . $key1 . "' class='collapse out'>";
+                    foreach ($value1 as $key2 => $value2) {
+                        if (is_string($key2)) {
+                            echo "<h4>" . $key2 . "</h4>";   //这里其实不会显示
+                        }
+                        bookmark_output($value2);
+                    }
+                    echo "</div>";
+                    echo "</div>";
                 }
+                bookmark_output($value1);
             }
-            $out = $out . "</div></div>\n";
+            echo "</div>";
+            echo "</div>";
         }
-        else{
-            $out = $out . "<h2>" . $folder_item['folder_name'] . "</h2>\n";
+        bookmark_output($value0);
+        /*
+        foreach ($value0 as $item0) {
+            echo $item0['title'];
         }
-        return $out;
+        */
     }
 
-    //*/
-    /*
-    function folder_bookmark_output($folder_item)
-    {
-        if ($folder_item['subfolder'] != null || $folder_item['bookmarks'] != null) {
-            $out =  "<h2 class='folder_title' data-toggle='collapse' data-target='#" . $folder_item['id'] . "'><i class='fa fa-folder-open-o' aria-hidden='true'></i>  " . $folder_item['folder_name'] . "</h2>\n";
-            $out =$out . "<div class='sub_folder collapse in' id='" . $folder_item['id'] . "'>\n";
-        }
-        if ($folder_item['bookmarks'] != null) {
-            //$out = $out . "<div id='" . $folder_item['id'] . "' class='collapse in'>\n";
-            $out = $out . bookmark_output($folder_item['bookmarks']);
-            //$out = $out . "</div>\n";
-        }
-        if ($folder_item['subfolder'] != null || $folder_item['bookmarks'] != null) {
-            $out = $out . "</div>\n";
-        }
-        if ($folder_item['subfolder'] != null) {
-            foreach ($folder_item['subfolder'] as $item) {
-                $out = $out . folder_bookmark_output($item);
-            }
-        }
-        return $out;
-    }
-   */
-
-
-    function bookmark_output2($bookmark)
-    {
-        $out = '';
-        for ($i = 0; $i < count($bookmark); $i++) {
-            if ($bookmark[$i]['url'] != '') {
-                $out = $out . mb_substr($bookmark[$i]['title'], 0, 10);
-            }
-        }
-        return $out;
-    }
 
     function bookmark_output($bookmark)
     {
-        $out = '';
         $arr = array("primary", "success", "info", "warning", "danger");
         $j = 0;
         $tmp_tag = "null";
@@ -193,46 +153,49 @@
                         if ($j == 5) {
                             $j = 0;
                         }
-                        $out = $out . "</div></div></div>\n";
+                        echo '</div></div></div>';
                     }
-                    $out = $out . '<div class="panel panel-' . $arr[$j] . '"><div class="panel-heading">' . "\n";
-                    $out = $out . $tag;
-                    $out = $out . '</div><div class="panel-body"><div class="row">' . "\n";
+                    echo '<div class="panel panel-' . $arr[$j] . '"><div class="panel-heading">';
+                    echo $tag;
+                    echo '</div><div class="panel-body"><div class="row">';
                 }
-                $out = $out . '<div class="col-xs-6 col-sm-3 col-md-2 href-div">';
+                echo '<div class="col-xs-6 col-sm-3 col-md-2 href-div">';
                 if ($bookmark[$i]['icon'] != '' && $bookmark[$i]['icon'] != null) {
                     $icon = '<img src="' . $bookmark[$i]['icon'] . '" style="width:16px;height:16px;">&nbsp;';
                 } elseif ($bookmark[$i]['icon_uri'] != '' && $bookmark[$i]['icon_uri'] != null) {
                     $icon = '<img src="' . $bookmark[$i]['icon_uri'] . '" style="width:16px;height:16px;">&nbsp;';
                 } else {
-                    $icon = '<img src="' . site_url('resource/images/default.ico') . '" style="width:16px;height:16px;">&nbsp;';
+                    $icon =  '<img src="' . site_url('resource/images/default.ico'). '" style="width:16px;height:16px;">&nbsp;';
                 }
-                $out = $out . '<a class="edit_bookmark" onclick="edit_bookmark(' . $bookmark[$i]['id'] . ',\'' . $bookmark[$i]['safe_code'] . '\')">';
-                $out = $out . $icon;
-                $out = $out . "</span>\n";
-                $out = $out . '<a class="tooltip-toggle href" href="' . $bookmark[$i]['url'] . '" target="_blank" data-toggle="tooltip" data-placement="top" title="' . $bookmark[$i]['title'] . '<br>' . $bookmark[$i]['url'] . '">' . "\n";
-                $out = $out . mb_substr($bookmark[$i]['title'], 0, 10);
-                $out = $out . "</a>\n";
-                if ($bookmark[$i]['is_private'] == 1) {
-                    $out = $out . '<i class="fa fa-lock red"></i>';
+                echo '<a class="edit_bookmark" onclick="edit_bookmark(' . $bookmark[$i]['id'].',\'' . $bookmark[$i]['safe_code'] . '\')">';
+                echo $icon;
+                echo '</span>';
+                echo '<a class="tooltip-toggle href" href="' . $bookmark[$i]['url'] . '" target="_blank" data-toggle="tooltip" data-placement="top" title="' . $bookmark[$i]['title'] . '<br>' . $bookmark[$i]['url'] . '">';
+                echo mb_substr($bookmark[$i]['title'], 0, 10);
+                echo '</a>';
+                if ($bookmark[$i]['is_private']==1){
+                    echo '<i class="fa fa-lock red"></i>';
                 }
-                $out = $out . "</div>\n";
-                $out = $out . "\n";
+                echo '</div>';
+                echo "\n";
                 if ($bookmark[$i]["tag"] == '') {
                     $tmp_tag = "无标签";
                 } else {
                     $tmp_tag = $bookmark[$i]["tag"];
                 }
                 if ($i == count($bookmark) - 1) {
-                    $out = $out . "</div></div></div>\n";
+                    echo '</div></div></div>';
                 }
             }
         }
-        return $out;
     }
 
     ?>
+
+
 </div>
+
+
 <script>
     $(function () {
         $('.tooltip-toggle').tooltip(
@@ -240,32 +203,32 @@
         );
     });
 
-    function edit_bookmark(id, code) {
+    function edit_bookmark(id,code){
         layer.open({
             type: 2,
             title: '编辑书签',
             shadeClose: true,
             shade: 0.8,
             area: ['600px', '380px'],
-            content: '<?php echo site_url('user/edit_bookmark/'); ?>' + id + '/' + code//iframe的url
+            content: '<?php echo site_url('user/edit_bookmark/'); ?>'+id+'/' +code//iframe的url
         });
     }
 
-    function getData() {
-        var url = $("#url").val();
-        if (IsURL(url)) {
+    function getData(){
+        var url= $("#url").val();
+        if (IsURL(url)){
             $.ajax({
-                url: "/user/url_title/",
-                type: "POST",
-                data: {"url": url},
+                url:"/user/url_title/",
+                type:"POST",
+                data:{"url":url},
                 timeout: 5000
-            }).done(function (data, status) {
+            }).done(function (data,status) {
                 console.log(data);
                 // 请求成功
                 if (status == "success") {
                     $("#title").val(data);
                 }
-                else {
+                else{
                     alert("未成功获取标题");
                 }
             }).fail(function (jqXHR, textStatus, errorThrown) {
@@ -273,13 +236,13 @@
                 alert("未成功获取标题");
             });
         }
-        else {
+        else{
             alert("网址无效！");
         }
     };
 
     function IsURL(strUrl) {
-        if (strUrl == '' || strUrl == null) {
+        if (strUrl==''||strUrl==null){
             return false;
         }
         var regular = /^\b(((https?|http?|ftp):\/\/)?[-a-z0-9]+(\.[-a-z0-9]+)*\.(?:com|edu|gov|int|mil|net|org|biz|info|name|museum|asia|coop|aero|[a-z][a-z]|((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]\d)|\d))\b(\/[-a-z0-9_:\@&?=+,.!\/~%\$]*)?)$/i
@@ -291,19 +254,15 @@
         }
     }
 
-
+    //自动折叠功能，目前不用
+    /*
     $(function () {
-        $(".folder_title").each(function () {
-            $(this).click(function () {
-                if ($(this).hasClass("collapsed")) {
-                    $(this).parent().find(".fa:first").removeClass("fa-folder-o");
-                    $(this).parent().find(".fa:first").addClass("fa-folder-open-o");
-                }
-                else {
-                    $(this).parent().find(".fa:first").removeClass("fa-folder-open-o");
-                    $(this).parent().find(".fa:first").addClass("fa-folder-o");
-                }
-            });
+        $("a[data-toggle='collapse']").hover(function(){
+            console.log($(this).attr('href'));
+            $($(this).attr('href')).collapse('show');
+        },function(){
+            $($(this).attr('href')).collapse('hide');
         });
     });
+    */
 </script>
