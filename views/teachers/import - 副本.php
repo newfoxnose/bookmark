@@ -40,11 +40,6 @@
                 reader.onload=function fileReadCompleted(){
                     $("#bm").html(reader.result)
                     var dl=$("#bm dl").first();
-                    var onlywork=$("meta[name=onlywork]");
-                    if (onlywork.length==1){
-                        $("#onlywork").val("onlywork");
-                    }
-                    console.log(onlywork.length);
                     console.log("dt长度为："+dl.children("dt").length);
                     //var dt = dl.children("dt").eq(0);
                     //var obj = foo(dt);

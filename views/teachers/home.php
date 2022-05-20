@@ -104,14 +104,18 @@
     //$json = json_encode($bookmark, JSON_UNESCAPED_UNICODE);
     //echo $json;
 
-
-    foreach ($root_bookmarks as $item) {
-        echo bookmark_output($item);
+    if ($root_bookmarks != null) {
+        foreach ($root_bookmarks as $item) {
+            echo bookmark_output($item);
+        }
     }
 
-    foreach ($folder as $item) {
-        echo folder_bookmark_output($item);
+    if ($folder != null) {
+        foreach ($folder as $item) {
+            echo folder_bookmark_output($item);
+        }
     }
+
 
     ///*
     function folder_bookmark_output($folder_item)
@@ -130,8 +134,7 @@
                 }
             }
             $out = $out . "</div></div>\n";
-        }
-        else{
+        } else {
             $out = $out . "<h2>" . $folder_item['folder_name'] . "</h2>\n";
         }
         return $out;
@@ -246,6 +249,7 @@
             title: '编辑书签',
             shadeClose: true,
             shade: 0.8,
+            offset: '100px',
             area: ['600px', '380px'],
             content: '<?php echo site_url('user/edit_bookmark/'); ?>' + id + '/' + code//iframe的url
         });
